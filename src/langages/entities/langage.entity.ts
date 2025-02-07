@@ -26,6 +26,9 @@ export class Langage extends Document {
 
     @Prop()
     releaseDate: string;
+
+    @Prop({default: 0})
+    recommendations: number;
 }
 
 export const LangageSchema = SchemaFactory.createForClass(Langage);

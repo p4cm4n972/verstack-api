@@ -8,13 +8,17 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
+constructor(private readonly usersService: UsersService) {}
+
   @Get('all')
-  findAll(@Query() paginationQuery): string {
+  findAll(@Query() paginationQuery) {
     const { limit, offset } = paginationQuery;
-    return `This action returns all. Limit: ${limit}, Offset: ${offset}`;
+    return this.usersService.findAll(paginationQuery);
   }
 
   @Get(':id')
@@ -23,8 +27,8 @@ export class UsersController {
   }
 
   @Post()
-  create(@Body() body): string {
-    return body;
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
   @Patch(':id')
