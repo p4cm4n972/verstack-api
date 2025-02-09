@@ -22,6 +22,10 @@ constructor(
         return this.userModel.find().skip(offset).limit(limit).exec();
     }
 
+    findByEmail(email: any) {
+        return this.userModel.findOne({ email }).exec();
+    }
+
     findOne(id: number) {
         return `This action returns a #${id} user`;
     }

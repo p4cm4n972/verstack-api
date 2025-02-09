@@ -1,13 +1,17 @@
-import { IsString, IsNotEmpty, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsBoolean, IsEmail, MinLength, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   pseudo: string;
 
-  @IsString()
+  @IsEmail()
   @IsNotEmpty()
   email: string;
+
+  @IsNotEmpty()
+  @MinLength(8)
+  password: string;
 
   @IsString()
   @IsNotEmpty()
@@ -25,11 +29,12 @@ export class CreateUserDto {
   @IsNotEmpty()
   experience: string;
 
-  @IsString()
+  @IsBoolean()
   @IsNotEmpty()
-  acceptTerms: string;
+  acceptTerms: boolean;
 
   @IsBoolean()
   @IsNotEmpty()
+  @IsOptional()
   isAdmin: boolean;
 }
