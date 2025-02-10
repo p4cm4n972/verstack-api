@@ -20,6 +20,7 @@ export class AuthenticationService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
+    console.log('signUpDto', signUpDto);
 
     const existingUser = await this.usersService.findByEmail(signUpDto.email);
     if (existingUser) {
@@ -37,7 +38,7 @@ export class AuthenticationService {
       email: signUpDto.email || '',
       job: signUpDto.job || '',
       ageRange: signUpDto.ageRange || '',
-      SalaryRange: signUpDto.SalaryRange || '',
+      salaryRange: signUpDto.salaryRange || '',
       experience: signUpDto.experience || '',
       acceptTerms: signUpDto.acceptTerms || false,
       isAdmin: signUpDto.isAdmin || false,
@@ -48,10 +49,14 @@ export class AuthenticationService {
   async signIn(signInDto: SignInDto) {
     const user = await this.userModel.findOne({
       email: signInDto.email,
-      password: signInDto.password,
     });
     if (!user) {
       throw new UnauthorizedException('User does not exist');
+    }
+
+    const isEqual = await bcrypt.compare(signInDto.password, user.password);
+    if (!isEqual) {
+      throw new UnauthorizedException('Password is incorrect');
     }
 
     return user;

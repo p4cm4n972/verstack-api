@@ -8,13 +8,14 @@ export class AuthenticationController {
     constructor(private readonly authService: AuthenticationService) {}
 
     @Post('signup')
-    signUp(@Body() signUpDto: SignUpDto) {
+    async signUp(@Body() signUpDto: SignUpDto) {
         return this.authService.signUp(signUpDto);
     }
 
     @HttpCode(HttpStatus.OK)
     @Post('signin')
     signIn(@Body() signInDto: SignInDto) {
+        console.log('signInDto', signInDto);
         return this.authService.signIn(signInDto);
     }
 }

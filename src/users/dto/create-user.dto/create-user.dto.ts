@@ -23,7 +23,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  SalaryRange: string;
+  salaryRange: string;
 
   @IsString()
   @IsNotEmpty()

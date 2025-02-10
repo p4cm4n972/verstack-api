@@ -12,7 +12,7 @@ import { UsersService } from 'src/users/users.service';
                 schema: UserSchema,
             },
         ])],
+        controllers: [AuthenticationController],
     providers: [UsersService, AuthenticationService],
-    controllers: [AuthenticationController],
 })
 export class IamModule {}
