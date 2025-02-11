@@ -22,8 +22,9 @@ constructor(private readonly usersService: UsersService) {}
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): string {
-    return `This action returns  ${id}`;
+  findOne(@Param('id') id: any) {
+    console.log(id)
+    return this.usersService.findOne(id);
   }
 
   @Post()
@@ -32,12 +33,12 @@ constructor(private readonly usersService: UsersService) {}
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body): string {
-    return `This action updates ${id}`;
+  update(@Param('id') id: any, @Body() body) {
+    return this.usersService.update(id, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): string {
-    return `This action removes ${id}`;
+  remove(@Param('id') id: any) {
+    return this.usersService.remove(id);
   }
 }

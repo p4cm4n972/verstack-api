@@ -34,6 +34,8 @@ export class AuthenticationService {
     const hashedPassword = await bcrypt.hash(signUpDto.password, saltOrRounds);
 
     return this.usersService.create({
+      firstName: signUpDto.firstName || '',
+      lastName: signUpDto.lastName || '',
       pseudo: signUpDto.pseudo || '',
       email: signUpDto.email || '',
       job: signUpDto.job || '',
@@ -43,6 +45,10 @@ export class AuthenticationService {
       acceptTerms: signUpDto.acceptTerms || false,
       isAdmin: signUpDto.isAdmin || false,
       password: hashedPassword,
+      profilePicture: signUpDto.profilePicture || '',
+      favoris: signUpDto.favoris || [],
+      friends: signUpDto.friends || [],
+      projets: signUpDto.projets || [],
     });
   }
 

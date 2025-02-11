@@ -26,16 +26,17 @@ constructor(
         return this.userModel.findOne({ email }).exec();
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} user`;
+    findOne(id: any) {
+        return this.userModel.findOne({ _id: id }).exec();;
     }
 
     update(id: number, updateUserDto: any) {
-        return `This action updates a #${id} user`;
+        return this.userModel.updateOne({ _id: id }, { $set: updateUserDto }).exec();
     }
 
     remove(id: number) {
-        return `This action removes a #${id} user`;
+        return this.userModel.deleteOne({ _id: id }).
+        exec();
     }
 
 }

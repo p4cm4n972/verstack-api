@@ -3,6 +3,13 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class User extends Document {
+
+    @Prop()
+    firstName: string;
+
+    @Prop()
+    lastName: string;
+
     @Prop()
     pseudo: string;
 
@@ -29,6 +36,12 @@ export class User extends Document {
 
     @Prop()
     isAdmin: boolean;
+
+    @Prop()
+    profilePicture: string;
+
+    @Prop()
+    favoris: string[];
 
     
 }
