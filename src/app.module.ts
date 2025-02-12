@@ -18,7 +18,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
     }),
     MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://localhost/nest',
+      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/admin',
     ),
   ],
   controllers: [AppController, FrameworksController],
