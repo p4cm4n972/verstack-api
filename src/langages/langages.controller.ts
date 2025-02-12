@@ -13,7 +13,7 @@ import { CreateLangageDto } from './dto/create-langage.dto/create-langage.dto';
 import { UpdateLangageDto } from './dto/update-langage.dto/update-langage.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto/pagination-query.dto';
 
-@Controller('langages')
+@Controller('api/langages')
 export class LangagesController {
   constructor(private readonly langagesService: LangagesService) {}
 

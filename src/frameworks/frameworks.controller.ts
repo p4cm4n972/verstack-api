@@ -9,7 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 
-@Controller('frameworks')
+@Controller('api/frameworks')
 export class FrameworksController {
   @Get('all')
   findAll(@Query() paginationQuery): string {

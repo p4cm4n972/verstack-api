@@ -59,7 +59,6 @@ export class AuthenticationService {
     if (!user) {
       throw new UnauthorizedException('User does not exist');
     }
-
     const isEqual = await bcrypt.compare(signInDto.password, user.password);
     if (!isEqual) {
       throw new UnauthorizedException('Password is incorrect');
