@@ -8,12 +8,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { IamModule } from './iam/iam.module';
 import { ConfigModule } from '@nestjs/config';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
     LangagesModule,
     UsersModule,
     IamModule,
+    NewsModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
