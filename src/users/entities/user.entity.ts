@@ -40,8 +40,8 @@ export class User extends Document {
     @Prop()
     profilePicture: string;
 
-    @Prop()
-    favoris: string[];
+    @Prop({type: [Object], default: []})
+    favoris: object[];
 
     
 }

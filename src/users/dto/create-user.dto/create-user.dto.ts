@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsBoolean, IsEmail, MinLength, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsBoolean, IsEmail, MinLength, IsOptional, IsArray } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -51,9 +51,9 @@ export class CreateUserDto {
   @IsOptional()
   profilePicture: string;
 
-  @IsString({ each: true })
+  @IsArray()
   @IsOptional()
-  favoris: string[];
+  favoris: object[];
 
   @IsString({ each: true })
   @IsOptional()
