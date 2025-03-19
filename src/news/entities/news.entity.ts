@@ -15,7 +15,7 @@ export class News extends Document {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ required: true })
+  @Prop()
   author?: string;
 
   @Prop({ required: true })

@@ -20,7 +20,6 @@ export class AuthenticationService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    console.log('signUpDto', signUpDto);
 
     const existingUser = await this.usersService.findByEmail(signUpDto.email);
     if (existingUser) {

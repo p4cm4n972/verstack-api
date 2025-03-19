@@ -23,7 +23,6 @@ constructor(private readonly usersService: UsersService) {}
 
   @Get(':id')
   findOne(@Param('id') id: any) {
-    console.log(id)
     return this.usersService.findOne(id);
   }
 
