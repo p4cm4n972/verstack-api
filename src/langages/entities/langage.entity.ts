@@ -6,7 +6,7 @@ export type LangageDocument = Langage & Document;
 @Schema({ _id: true, timestamps: true })
 export class Version {
   @Prop({ required: true })
-  type: 'current' | 'lts' | 'edition' | 'livingStandard';
+  type: 'current' | 'lts' | 'edition' | 'livingStandard' | 'standard';
 
   @Prop({ required: true })
   label: string;
@@ -29,7 +29,7 @@ export class Langage extends Document {
   @Prop({ required: true })
   documentation: string;
 
-  @Prop({ type: [String], enum: ['web', 'mobile', 'embedded', 'datascience', 'ia', 'game'], required: true })
+  @Prop({ type: [String], enum: ['web', 'mobile', 'embedded', 'datascience', 'ia', 'game', 'backend', 'frontend'], required: true })
   domain: string[];
 
   @Prop({ type: [Version], required: true })
