@@ -23,7 +23,8 @@ import {
     CURRENT = 'current',
     LTS = 'lts',
     EDITION = 'edition',
-    LIVING_STANDARD = 'livingStandard'
+    LIVING_STANDARD = 'livingStandard',
+    STANDARD = 'standard'
   }
   
   export class VersionDto {
