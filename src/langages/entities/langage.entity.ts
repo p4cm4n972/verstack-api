@@ -1,34 +1,45 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+export type LangageDocument = Langage & Document;
+
+@Schema({ _id: true, timestamps: true })
+export class Version {
+  @Prop({ required: true })
+  type: 'current' | 'lts' | 'edition' | 'livingStandard';
+
+  @Prop({ required: true })
+  label: string;
+
+  @Prop()
+  releaseDate?: string;
+}
+
 @Schema()
 export class Langage extends Document {
-    @Prop()
-    name: string;
+  @Prop({ required: true })
+  name: string;
 
-    @Prop()   
-    description: string;
+  @Prop({ required: true })
+  description: string;
 
-    @Prop()
-    logoUrl: string;
+  @Prop({ required: true })
+  logoUrl: string;
 
-    @Prop()
-    documentation: string;
+  @Prop({ required: true })
+  documentation: string;
 
-    @Prop([String])
-    domain: string[];
+  @Prop({ type: [String], enum: ['web', 'mobile', 'embedded', 'datascience', 'ia', 'game'], required: true })
+  domain: string[];
 
-    @Prop()
-    currentVersion: string;
+  @Prop({ type: [Version], required: true })
+  versions: Version[];
 
-    @Prop()
-    ltsVersion: string;
+  @Prop({ required: true })
+  initialRelease: string;
 
-    @Prop()
-    releaseDate: string;
-
-    @Prop({default: 0})
-    recommendations: number;
+  @Prop({ default: 0 })
+  recommendations: number;
 }
 
 export const LangageSchema = SchemaFactory.createForClass(Langage);
