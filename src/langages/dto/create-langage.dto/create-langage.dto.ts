@@ -19,7 +19,9 @@ import {
     GAME = 'game',
     BACKEND = 'backend',
     FRONTEND = 'frontend',
-    DESKTOP = 'desktop'
+    DESKTOP = 'desktop',
+    DEVOPS = 'devops',
+    BLOCKCHAIN = 'blockchain',
   }
   
   export enum VersionType {
