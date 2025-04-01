@@ -16,7 +16,9 @@ import {
     EMBEDDED = 'embedded',
     DATASCIENCE = 'datascience',
     IA = 'ia',
-    GAME = 'game'
+    GAME = 'game',
+    BACKEND = 'backend',
+    FRONTEND = 'frontend',
   }
   
   export enum VersionType {
