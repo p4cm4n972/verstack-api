@@ -29,7 +29,7 @@ export class Langage extends Document {
   @Prop({ required: true })
   documentation: string;
 
-  @Prop({ type: [String], enum: ['web', 'mobile', 'embedded', 'datascience', 'ia', 'game', 'backend', 'frontend'], required: true })
+  @Prop({ type: [String], enum: ['web', 'mobile', 'embedded', 'datascience', 'ia', 'game', 'backend', 'frontend', 'desktop'], required: true })
   domain: string[];
 
   @Prop({ type: [Version], required: true })

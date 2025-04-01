@@ -19,6 +19,7 @@ import {
     GAME = 'game',
     BACKEND = 'backend',
     FRONTEND = 'frontend',
+    DESKTOP = 'desktop'
   }
   
   export enum VersionType {
