@@ -7,7 +7,7 @@ import { LangagesModule } from './langages/langages.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { IamModule } from './iam/iam.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NewsModule } from './news/news.module';
 
 @Module({
@@ -18,9 +18,19 @@ import { NewsModule } from './news/news.module';
     NewsModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
-    MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/admin',
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) =>
+        configService.get<string>('MONGO_URI')
+          ? {
+              uri: configService.get<string>('MONGO_URI'),
+            }
+          : {
+              uri: 'mongodb://localhost/nest',
+            },
+    }
     ),
   ],
   controllers: [AppController, FrameworksController],
