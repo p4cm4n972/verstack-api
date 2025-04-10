@@ -101,6 +101,7 @@ export class AuthenticationService {
         this.jwtConfiguration.accessTokenTtl,
         {
           pseudo: user.pseudo,
+          id: user._id,
         },
       ),
       this.signToken(user.id, this.jwtConfiguration.refreshTokenTtl, {
