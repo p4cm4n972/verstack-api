@@ -7,6 +7,8 @@ import {
   EventEntity,
   EventSchema,
 } from 'src/events/entities/event.entity/event.entity';
+import { LangageUpdateService } from './langage-update.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -20,8 +22,9 @@ import {
         schema: EventSchema,
       },
     ]),
+    HttpModule
   ],
   controllers: [LangagesController],
-  providers: [{ provide: LangagesService, useClass: LangagesService }],
+  providers: [{ provide: LangagesService, useClass: LangagesService }, { provide: LangageUpdateService, useClass: LangageUpdateService }],
 })
 export class LangagesModule {}

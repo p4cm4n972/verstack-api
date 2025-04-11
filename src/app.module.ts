@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { IamModule } from './iam/iam.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NewsModule } from './news/news.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NewsModule } from './news/news.module';
     UsersModule,
     IamModule,
     NewsModule,
+    AdminModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
