@@ -102,6 +102,8 @@ export class AuthenticationService {
         {
           pseudo: user.pseudo,
           id: user._id,
+          role: user.role,
+          permissions: user.permissions,
         },
       ),
       this.signToken(user.id, this.jwtConfiguration.refreshTokenTtl, {

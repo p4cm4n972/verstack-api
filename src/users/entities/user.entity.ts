@@ -1,5 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Role } from '../enums/role.enum';
+import { Permission, PermissionType } from 'src/iam/permission.type';
+
 
 @Schema()
 export class User extends Document {
@@ -34,8 +37,12 @@ export class User extends Document {
     @Prop()
     acceptTerms: string;
 
-    @Prop()
-    isAdmin: boolean;
+    @Prop({enum: Role, default: Role.Regular})
+    role: Role;
+
+    @Prop({enum: Permission , default: [], type: [String]})
+    permissions: PermissionType[];
+
 
     @Prop()
     profilePicture: string;
@@ -43,7 +50,6 @@ export class User extends Document {
     @Prop({type: [Object], default: []})
     favoris: object[];
 
-    
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

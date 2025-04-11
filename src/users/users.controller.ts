@@ -10,10 +10,12 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
 import { UsersService } from './users.service';
+import { Roles } from 'src/iam/authorization/decorators/roles.decorator';
+import { Role } from './enums/role.enum';
 
 @Controller('api/users')
 export class UsersController {
-constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('all')
   findAll(@Query() paginationQuery) {
@@ -26,16 +28,19 @@ constructor(private readonly usersService: UsersService) {}
     return this.usersService.findOne(id);
   }
 
+  @Roles(Role.Admin)
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
+  @Roles(Role.Admin)
   @Patch(':id')
   update(@Param('id') id: any, @Body() body) {
     return this.usersService.update(id, body);
   }
-
+  
+  @Roles(Role.Admin)
   @Delete(':id')
   remove(@Param('id') id: any) {
     return this.usersService.remove(id);
