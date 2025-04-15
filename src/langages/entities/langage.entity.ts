@@ -13,6 +13,12 @@ export class Version {
 
   @Prop()
   releaseDate?: string;
+
+  @Prop()
+  endSupport?: string;
+
+  @Prop()
+  supportDuration?: number; 
 }
 
 @Schema()
@@ -40,6 +46,7 @@ export class Langage extends Document {
 
   @Prop({ default: 0 })
   recommendations: number;
+  
 }
 
 export const LangageSchema = SchemaFactory.createForClass(Langage);

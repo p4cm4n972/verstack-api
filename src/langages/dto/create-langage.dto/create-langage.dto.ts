@@ -6,7 +6,8 @@ import {
     ValidateNested,
     IsDateString,
     IsEnum,
-    IsOptional
+    IsOptional,
+    IsNumber
   } from 'class-validator';
   import { Type } from 'class-transformer';
   
@@ -44,6 +45,14 @@ import {
     @IsOptional()
     @IsDateString()
     readonly releaseDate?: string;
+
+    @IsOptional()
+    @IsDateString()
+    endSupport?: string;
+
+    @IsOptional()
+    @IsNumber()
+    readonly supportDuration?: number;
   }
   
   export class CreateLangageDto {
@@ -55,7 +64,7 @@ import {
     @IsNotEmpty()
     readonly description: string;
   
-    @IsUrl()
+    @IsString()
     @IsNotEmpty()
     readonly logoUrl: string;
   

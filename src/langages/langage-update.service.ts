@@ -136,14 +136,25 @@ export class LangageUpdateService {
   }
   
 
+  private githubHeaders(): Record<string, string> {
+    return {
+      'User-Agent': 'verstack-bot',
+      ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {})
+    };
+  }
+  
 
 
 
 
 
 
-
-  async syncAll() {
+  async syncAll(): Promise<{ success: string[]; failed: { name: string; error: string }[] }> {
+    const success: string[] = [];
+    const failed: { name: string; error: string }[] = [];
+  
+    this.logger.log('🚀 Début de la synchronisation des langages...');
+  
     for (const lang of SYNC_LANGAGES) {
       try {
         switch (lang.sourceType) {
@@ -151,17 +162,30 @@ export class LangageUpdateService {
             await this.updateFromNpm(lang.nameInDb, lang.sourceUrl, lang.ltsSupport);
             break;
           case 'github':
-            await this.updateFromGitHubRelease(lang.nameInDb, lang.sourceUrl);
+            lang.useTags
+              ? await this.updateFromGitHubTag(lang.nameInDb, lang.sourceUrl)
+              : await this.updateFromGitHubRelease(lang.nameInDb, lang.sourceUrl);
             break;
           case 'custom':
             await this.updateCustom(lang.nameInDb, lang.sourceUrl);
             break;
         }
-      } catch (err) {
-        this.logger.error(`❌ Erreur de synchro ${lang.nameInDb}`, err);
+        success.push(lang.nameInDb);
+      } catch (error) {
+        const errorMsg = error?.message || error.toString();
+        failed.push({ name: lang.nameInDb, error: errorMsg });
+        this.logger.error(`❌ Erreur sur ${lang.nameInDb}`, error);
       }
     }
+  
+    this.logger.log(`✅ Terminé : ${success.length} ok / ${failed.length} échecs`);
+    if (failed.length > 0) {
+      this.logger.warn(`❌ Échecs : ${failed.map(f => f.name).join(', ')}`);
+    }
+  
+    return { success, failed };
   }
+  
 
   async updateFromNpm(nameInDb: string, npmPackage: string, ltsSupport = false) {
     const res = await firstValueFrom(this.http.get(`https://registry.npmjs.org/${npmPackage}`));
@@ -176,15 +200,44 @@ export class LangageUpdateService {
     this.logger.log(`✅ ${nameInDb} (npm): latest=${latest}${ltsSupport ? `, lts=${lts}` : ''}`);
   }
 
+
+
+  async updateFromGitHubTag(nameInDb: string, repo: string) {
+  const res = await firstValueFrom(
+    this.http.get(`https://api.github.com/repos/${repo}/tags`, {
+      headers: this.githubHeaders()
+    })
+  );
+
+  const version = res.data?.[0]?.name?.replace(/^v/, '') ?? null;
+
+  if (version) {
+    await this.setVersion(nameInDb, 'current', version);
+    this.logger.log(`✅ ${nameInDb} (GitHub tags) : ${version}`);
+  } else {
+    this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
+  }
+}
+
   async updateFromGitHubRelease(nameInDb: string, repo: string) {
     const res = await firstValueFrom(
-      this.http.get(`https://api.github.com/repos/${repo}/releases/latest`)
+      this.http.get(`https://api.github.com/repos/${repo}/releases/latest`, {
+        headers: this.githubHeaders()
+      })
     );
-    const version = res.data.tag_name?.replace(/^v/, '');
 
-    await this.setVersion(nameInDb, 'current', version, res.data.published_at);
-    this.logger.log(`✅ ${nameInDb} (GitHub): ${version}`);
+    const version = res.data?.tag_name?.replace(/^v/, '') ?? null;
+    const releaseDate = res.data?.published_at ?? null;
+
+    if (version) {
+      await this.setVersion(nameInDb, 'current', version, releaseDate);
+      this.logger.log(`✅ ${nameInDb} (GitHub releases) : ${version}`);
+    } else {
+      this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
+    }
   }
+
+
 
   async updateCustom(nameInDb: string, url: string) {
     if (url === 'nodejs') {
@@ -209,6 +262,25 @@ export class LangageUpdateService {
       await this.setVersion(nameInDb, 'current', latest);
       this.logger.log(`✅ Go (custom): ${latest}`);
     }
+
+    if (url.includes('php.net/releases')) {
+      const res = await firstValueFrom(this.http.get(url));
+      const latest = Object.keys(res.data)[0]; // exemple: "8.3.4"
+    
+      await this.setVersion(nameInDb, 'current', latest);
+      this.logger.log(`✅ PHP (custom): ${latest}`);
+    }
+
+    if (url.includes('dotnetcli')) {
+      const res = await firstValueFrom(this.http.get(url));
+      const latest = res.data?.releases?.[0]?.latestSdk;
+    
+      if (latest) {
+        await this.setVersion(nameInDb, 'current', latest);
+        this.logger.log(`✅ .NET SDK: ${latest}`);
+      }
+    }
+    
   }
 
   private async setVersion(name: string, type: string, label: string, releaseDate?: string) {
