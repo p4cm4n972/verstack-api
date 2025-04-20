@@ -16,7 +16,7 @@ export class User extends Document {
     @Prop()
     pseudo: string;
 
-    @Prop()   
+    @Prop()
     email: string;
 
     @Prop()
@@ -37,18 +37,22 @@ export class User extends Document {
     @Prop()
     acceptTerms: string;
 
-    @Prop({enum: Role, default: Role.Regular})
+    @Prop({ enum: Role, default: Role.Regular })
     role: Role;
 
-    @Prop({enum: Permission , default: [], type: [String]})
+    @Prop({ enum: Permission, default: [], type: [String] })
     permissions: PermissionType[];
 
 
     @Prop()
     profilePicture: string;
 
-    @Prop({type: [Object], default: []})
+    @Prop({ type: [Object], default: [] })
     favoris: object[];
+
+    @Prop({ default: false })
+    isEmailVerified: boolean;
+
 
 }
 

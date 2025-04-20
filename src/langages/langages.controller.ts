@@ -24,7 +24,6 @@ export class LangagesController {
   @Auth(AuthType.None)
   @Get('all')
   findAll(@ActiveUser() user: ActiveUserData, @Query() paginationQuery: PaginationQueryDto) {
-    console.log('user', user);
      //  const { limit, offset } = paginationQuery;
       return this.langagesService.findAll(paginationQuery);
     }

@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,6 +24,8 @@ import {
   RefreshTokenIdsStorage,
 } from './refresh-token-ids.storage/refresh-token-ids.storage';
 import { randomUUID } from 'crypto';
+import { MailService } from 'src/mail.service';
+import { ResetPasswordDto } from './dto/reset-password.dto/reset-password.dto';
 
 @Injectable()
 export class AuthenticationService {
@@ -34,7 +37,8 @@ export class AuthenticationService {
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly usersService: UsersService,
     private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
-  ) {}
+    private readonly mailService: MailService
+  ) { }
 
   async signUp(signUpDto: SignUpDto) {
     const existingUser = await this.usersService.findByEmail(signUpDto.email);
@@ -49,7 +53,8 @@ export class AuthenticationService {
     try {
       const hashedPassword = await this.hashingService.hash(signUpDto.password);
 
-      return this.usersService.create({
+      const createdUser = await this.usersService.create({
+        sexe: signUpDto.sexe || '',
         firstName: signUpDto.firstName || '',
         lastName: signUpDto.lastName || '',
         pseudo: signUpDto.pseudo || '',
@@ -65,7 +70,15 @@ export class AuthenticationService {
         favoris: signUpDto.favoris || [],
         friends: signUpDto.friends || [],
         projets: signUpDto.projets || [],
+        isEmailVerified: signUpDto.isEmailVerified || false,
       });
+
+      const emailToken = await this.generateEmailVerificationToken(createdUser._id);
+
+
+      await this.mailService.sendConfirmationEmail(createdUser.email, emailToken)
+
+
     } catch (error) {
       const pgUniqueViolationErrorCode = '23505';
       if (error.code === pgUniqueViolationErrorCode) {
@@ -74,6 +87,45 @@ export class AuthenticationService {
       throw new BadRequestException('Error creating user', error.message);
     }
   }
+  async generateEmailVerificationToken(userId: string | any): Promise<string> {
+    return this.jwtService.signAsync(
+      { sub: userId },
+      {
+        secret: this.jwtConfiguration.secret,
+        expiresIn: '1d', // validité du lien 24h par exemple
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      },
+    );
+  }
+
+  async verifyEmail(token: string): Promise<any> {
+    try {
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(token, {
+        secret: this.jwtConfiguration.secret,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      });
+
+      const user = await this.userModel.findById(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException("Utilisateur non trouvé.");
+      }
+
+      if (user.isEmailVerified) {
+        return { message: 'Adresse e-mail déjà vérifiée.' };
+      }
+
+      user.isEmailVerified = true;
+      await user.save();
+
+      return { message: 'Adresse e-mail vérifiée avec succès.' };
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException('Lien de vérification invalide ou expiré.');
+    }
+  }
+
 
   async signIn(signInDto: SignInDto) {
     const user = await this.userModel.findOne({
@@ -89,6 +141,13 @@ export class AuthenticationService {
     if (!isEqual) {
       throw new UnauthorizedException('Password is incorrect');
     }
+
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException(
+        "Votre adresse e-mail n'est pas vérifiée. Veuillez consulter votre boîte mail."
+      );
+    }
+
 
     return await this.generateTokens(user);
   }
@@ -169,4 +228,57 @@ export class AuthenticationService {
     }
     throw new BadRequestException('Email ou mot de passe incorrect.');
   }
+
+  // src/auth/authentication.service.ts
+
+  async sendPasswordResetLink(email: string): Promise<any> {
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException("Cet utilisateur n'existe pas.");
+    }
+
+    const payload = {
+      sub: user._id,
+      email: user.email,
+    };
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: this.jwtConfiguration.secret,
+      expiresIn: '15m',
+    });
+
+
+
+    await this.mailService.sendReinitialisationMail(user, token);
+
+    return { message: 'Un lien de réinitialisation a été envoyé par e-mail.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<any> {
+    try {
+      const { sub: userId } = await this.jwtService.verifyAsync<{ sub: string }>(
+        dto.token,
+        {
+          secret: this.jwtConfiguration.secret,
+        }
+      );
+
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundException('Utilisateur introuvable');
+      }
+
+      const hashedPassword = await this.hashingService.hash(dto.newPassword);
+      user.password = hashedPassword;
+      await user.save();
+
+      return { message: 'Mot de passe réinitialisé avec succès.' };
+    } catch (error) {
+      throw new UnauthorizedException('Jeton invalide ou expiré.');
+    }
+  }
+
+
+
 }

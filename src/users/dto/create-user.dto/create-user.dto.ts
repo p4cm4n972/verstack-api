@@ -2,7 +2,11 @@ import { IsString, IsNotEmpty, IsBoolean, IsEmail, MinLength, IsOptional, IsArra
 
 export class CreateUserDto {
 
-@IsString()
+  @IsString()
+  @IsOptional()
+  sexe: string;
+
+  @IsString()
   @IsOptional()
   firstName: string;
 
@@ -62,4 +66,8 @@ export class CreateUserDto {
   @IsString({ each: true })
   @IsOptional()
   projets: string[];
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isEmailVerified: boolean;
 }
