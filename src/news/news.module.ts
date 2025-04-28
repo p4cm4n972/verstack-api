@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { NewsController } from './news.controller';
 import { NewsService } from './news.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { News, NewsSchema } from './entities/news.entity';
+import { News, NewsSchema, Recommendation, RecommendationSchema } from './entities/news.entity';
 import {
   EventEntity,
   EventSchema,
@@ -14,6 +14,10 @@ import {
       {
         name: News.name,
         schema: NewsSchema,
+      },
+      {
+        name: Recommendation.name,
+        schema: RecommendationSchema
       },
       {
         name: EventEntity.name,

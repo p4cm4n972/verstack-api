@@ -14,6 +14,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { MailService } from './mail.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter'
 import { MailerTestService } from './mailer-test.service';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
 
 @Module({
   imports: [
@@ -65,6 +66,6 @@ import { MailerTestService } from './mailer-test.service';
   })
   ],
   controllers: [AppController, MailerTestController],
-  providers: [AppService, MailerTestService],
+  providers: [AppService, MailerTestService, CustomLoggerService],
 })
 export class AppModule {}

@@ -29,3 +29,4 @@ export class CreateNewsDto {
     @IsOptional()
     img?: string;
 }
+

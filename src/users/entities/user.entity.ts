@@ -6,6 +6,8 @@ import { Permission, PermissionType } from 'src/iam/permission.type';
 
 @Schema()
 export class User extends Document {
+    @Prop()
+    sexe: string;
 
     @Prop()
     firstName: string;

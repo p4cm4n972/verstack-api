@@ -1,15 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { Model, Connection } from 'mongoose';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto/pagination-query.dto';
 import { EventEntity } from 'src/events/entities/event.entity/event.entity';
-import { News } from './entities/news.entity';
+import { News, Recommendation } from './entities/news.entity';
 import { CreateNewsDto } from './dto/create-news.dto/create-news.dto';
 
 @Injectable()
 export class NewsService {
   constructor(
     @InjectModel(News.name) private readonly newsModel: Model<News>,
+    @InjectModel(Recommendation.name) private readonly recommendationModel: Model<News>,
     @InjectConnection() private readonly connection: Connection,
     @InjectModel(EventEntity.name)
     private readonly eventModel: Model<EventEntity>,
@@ -51,7 +52,7 @@ export class NewsService {
     return this.newsModel.deleteOne({ _id: id }).exec();
   }
 
-  async recommendNews(news: News) {
+  /*async recommendNews(news: News) {
     const session = await this.connection.startSession();
     session.startTransaction();
     try {
@@ -71,5 +72,62 @@ export class NewsService {
     } finally {
       session.endSession();
     }
+  }*/
+
+    async recommendNews(news: News, userId: string) {
+      const session = await this.connection.startSession();
+      session.startTransaction();
+    
+      try {
+        const alreadyRecommended = await this.recommendationModel.findOne({
+          userId,
+          articleId: news._id
+        }).session(session);
+    
+        if (alreadyRecommended) {
+          throw new ConflictException('Déjà recommandé');
+        }
+    
+        news.recommendations++;
+    
+        const recommendEvent = new this.eventModel({
+          name: 'recommend_news',
+          type: 'news',
+          payload: { newsId: news._id },
+        });
+    
+        const recommendation = new this.recommendationModel({
+          userId,
+          articleId: news._id
+        });
+    
+        await recommendEvent.save({ session });
+        await recommendation.save({ session });
+        await news.save({ session });
+    
+        await session.commitTransaction();
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
+      }
+    }
+    
+
+  async incrementLikes(id: string, userId: string): Promise<News> {
+    const article = await this.newsModel.findById(id);
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+  
+    if (article.likedBy.includes(userId)) {
+      throw new ConflictException('You have already liked this article');
+    }
+  
+    article.recommendations = (article.recommendations || 0) + 1;
+    article.likedBy.push(userId);
+    return article.save();
   }
+  
 }

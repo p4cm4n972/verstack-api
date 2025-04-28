@@ -41,6 +41,7 @@ export class NewsController {
   create(@Body() createNewsDto: CreateNewsDto) {
     return this.newsService.create(createNewsDto);
   }
+  
 
   @Roles(Role.Admin)
   @Patch(':id')
