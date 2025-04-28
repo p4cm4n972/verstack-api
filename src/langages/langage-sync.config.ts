@@ -8,100 +8,173 @@ export interface LangageSyncConfig {
   useTags?: boolean; // For GitHub, use tags instead of releases
 }
 
-export const SYNC_LANGAGES: LangageSyncConfig[] = [
+export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   {
-    nameInDb: 'Angular',
-    sourceType: 'npm',
-    sourceUrl: '@angular/core',
-    ltsSupport: true,
+  nameInDb: 'Angular',
+  sourceType: 'npm',
+  sourceUrl: '@angular/core',
+  ltsSupport: true,
   },
-  { nameInDb: 'React', sourceType: 'npm', sourceUrl: 'react' },
-  { nameInDb: 'Vue.js', sourceType: 'npm', sourceUrl: 'vue' },
-  { nameInDb: 'TypeScript', sourceType: 'npm', sourceUrl: 'typescript' },
-  { nameInDb: 'Node.js', sourceType: 'custom', sourceUrl: 'nodejs' },
   {
-    nameInDb: 'Go',
-    sourceType: 'custom',
-    sourceUrl: 'https://go.dev/dl/?mode=json',
-  },
-  { nameInDb: 'Rust', sourceType: 'github', sourceUrl: 'rust-lang/rust' },
-  { nameInDb: 'Swift', sourceType: 'github', sourceUrl: 'apple/swift' },
-  { nameInDb: 'Kotlin', sourceType: 'github', sourceUrl: 'JetBrains/kotlin' },
-  {
-    nameInDb: 'Python',
-  sourceType: 'github',
-  sourceUrl: 'python/cpython',
+  nameInDb: 'React',
+  sourceType: 'npm',
+  sourceUrl: 'react',
   ltsSupport: false,
-  useTags: true
   },
   {
-    nameInDb: 'Rust',
-    sourceType: 'github',
-    sourceUrl: 'rust-lang/rust'
+  nameInDb: 'Vue.js',
+  sourceType: 'npm',
+  sourceUrl: 'vue',
+  ltsSupport: true,
   },
   {
-    nameInDb: 'Swift',
-    sourceType: 'github',
-    sourceUrl: 'apple/swift'
+  nameInDb: 'TypeScript',
+  sourceType: 'npm',
+  sourceUrl: 'typescript',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Kotlin',
-    sourceType: 'github',
-    sourceUrl: 'JetBrains/kotlin',
-    useTags: true
+  nameInDb: 'Node.js',
+  sourceType: 'custom',
+  sourceUrl: 'https://nodejs.org/dist/index.json',
+  ltsSupport: true,
   },
   {
-    nameInDb: 'Flutter',
-    sourceType: 'github',
-    sourceUrl: 'flutter/flutter',
-    useTags: true
+  nameInDb: 'NestJS',
+  sourceType: 'npm',
+  sourceUrl: '@nestjs/core',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'PHP',
-    sourceType: 'custom',
-    sourceUrl: 'https://www.php.net/releases/index.php?json&max=1'
+  nameInDb: 'Next.js',
+  sourceType: 'npm',
+  sourceUrl: 'next',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Django',
-    sourceType: 'github',
-    sourceUrl: 'django/django',
-    useTags: true
+  nameInDb: 'Nuxt',
+  sourceType: 'npm',
+  sourceUrl: 'nuxt',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Laravel',
-    sourceType: 'github',
-    sourceUrl: 'laravel/framework',
-    useTags: true
+  nameInDb: 'Svelte',
+  sourceType: 'npm',
+  sourceUrl: 'svelte',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Next.js',
-    sourceType: 'github',
-    sourceUrl: 'vercel/next.js'
+  nameInDb: 'SolidJS',
+  sourceType: 'npm',
+  sourceUrl: 'solid-js',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Nuxt.js',
-    sourceType: 'github',
-    sourceUrl: 'nuxt/nuxt'
+  nameInDb: 'Qwik',
+  sourceType: 'npm',
+  sourceUrl: '@builder.io/qwik',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Astro',
-    sourceType: 'github',
-    sourceUrl: 'withastro/astro'
+  nameInDb: 'Electron',
+  sourceType: 'github',
+  sourceUrl: 'electron/electron',
+  ltsSupport: false,
   },
   {
-    nameInDb: 'Symfony',
-    sourceType: 'github',
-    sourceUrl: 'symfony/symfony',
-    useTags: true
+  nameInDb: 'Flutter',
+  sourceType: 'github',
+  sourceUrl: 'flutter/flutter',
+  ltsSupport: false,
   },
   {
-    nameInDb: '.NET',
-    sourceType: 'custom',
-    sourceUrl: 'https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json'
+  nameInDb: 'Python',
+  sourceType: 'custom',
+  sourceUrl: 'https://www.python.org/doc/versions/',
+  ltsSupport: true,
   },
   {
-    nameInDb: 'Spring Boot',
-    sourceType: 'github',
-    sourceUrl: 'spring-projects/spring-boot'
-  }
-];
+  nameInDb: 'Go',
+  sourceType: 'custom',
+  sourceUrl: 'https://go.dev/dl/?mode=json',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Dart',
+  sourceType: 'github',
+  sourceUrl: 'dart-lang/sdk',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Rust',
+  sourceType: 'github',
+  sourceUrl: 'rust-lang/rust',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Java',
+  sourceType: 'custom',
+  sourceUrl: 'https://api.adoptium.net/v3/info/release_versions',
+  ltsSupport: true,
+  },
+  {
+  nameInDb: 'PHP',
+  sourceType: 'custom',
+  sourceUrl: 'https://www.php.net/releases/index.php',
+  ltsSupport: true,
+  },
+  {
+  nameInDb: 'Redis',
+  sourceType: 'github',
+  sourceUrl: 'redis/redis',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'MongoDB',
+  sourceType: 'github',
+  sourceUrl: 'mongodb/mongo',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'PostgreSQL',
+  sourceType: 'custom',
+  sourceUrl: 'https://www.postgresql.org/docs/release/',
+  ltsSupport: true,
+  },
+  {
+  nameInDb: 'MySQL',
+  sourceType: 'custom',
+  sourceUrl: 'https://dev.mysql.com/doc/relnotes/mysql/',
+  ltsSupport: true,
+  },
+  {
+  nameInDb: 'Laravel',
+  sourceType: 'github',
+  sourceUrl: 'laravel/laravel',
+  ltsSupport: true,
+  },
+  {
+  nameInDb: 'Bootstrap',
+  sourceType: 'github',
+  sourceUrl: 'twbs/bootstrap',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Docker',
+  sourceType: 'github',
+  sourceUrl: 'moby/moby',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Kubernetes',
+  sourceType: 'github',
+  sourceUrl: 'kubernetes/kubernetes',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Ansible',
+  sourceType: 'github',
+  sourceUrl: 'ansible/ansible',
+  ltsSupport: false,
+  },
+  ];
