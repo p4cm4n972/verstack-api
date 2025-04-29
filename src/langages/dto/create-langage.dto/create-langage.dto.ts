@@ -84,5 +84,9 @@ import {
   
     @IsDateString()
     readonly initialRelease: string;
+
+    @IsNumber()
+    @IsOptional()
+    readonly recommendations?: number;
   }
   
