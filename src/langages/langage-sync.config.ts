@@ -100,10 +100,10 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   ltsSupport: false,
   },
   {
-  nameInDb: 'Dart',
-  sourceType: 'github',
-  sourceUrl: 'dart-lang/sdk',
-  ltsSupport: false,
+    nameInDb: 'Dart',
+    sourceType: 'custom',
+    sourceUrl: 'https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION',
+    ltsSupport: false,
   },
   {
   nameInDb: 'Rust',
@@ -130,10 +130,10 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   ltsSupport: false,
   },
   {
-  nameInDb: 'MongoDB',
-  sourceType: 'github',
-  sourceUrl: 'mongodb/mongo',
-  ltsSupport: false,
+    nameInDb: 'MongoDB',
+    sourceType: 'custom',
+    sourceUrl: 'https://www.mongodb.com/try/download/community',
+    ltsSupport: true,
   },
   {
   nameInDb: 'PostgreSQL',

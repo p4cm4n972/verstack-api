@@ -33,6 +33,7 @@ export class LangagesController {
     return this.langagesService.findOne(id);
   }
 
+  @Auth(AuthType.None)
   @Post()
   create(@Body() createLangageDto: CreateLangageDto) {
     return this.langagesService.create(createLangageDto);

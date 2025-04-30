@@ -44,7 +44,7 @@ export class Langage extends Document {
   @Prop({ required: true })
   initialRelease: string;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 0.0 })
   recommendations: number;
   
 }
