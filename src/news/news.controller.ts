@@ -31,6 +31,7 @@ export class NewsController {
     return this.newsService.findAll(paginationQuery);
   }
 
+  @Auth(AuthType.None)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.newsService.findOne(id);
