@@ -23,6 +23,12 @@ import {
     DESKTOP = 'desktop',
     DEVOPS = 'devops',
     BLOCKCHAIN = 'blockchain',
+    LANGUAGE = 'language',
+    FRAMEWORK = 'framework',
+    TOOLS = 'tools',
+    CLOUD = 'cloud',
+    DATABASE = 'database',
+    IDE = 'ide',
   }
   
   export enum VersionType {
