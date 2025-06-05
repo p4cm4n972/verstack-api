@@ -193,8 +193,8 @@ export class LangagesService {
     return this.langageModel.find().skip(offset).limit(limit).exec();
   }
 
-  findOne(id: string) {
-    const langage = this.langageModel.findOne({ _id: id }).exec();
+  async findOne(id: string) {
+    const langage = await this.langageModel.findOne({ _id: id }).exec();
     if (!langage) {
       throw new NotFoundException(`Langage with id ${id} not found`);
     }

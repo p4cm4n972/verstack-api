@@ -21,8 +21,8 @@ export class NewsService {
     return this.newsModel.find().skip(offset).limit(limit).exec();
   }
 
-  findOne(id: string) {
-    const news = this.newsModel.findOne({ _id: id }).exec();
+  async findOne(id: string) {
+    const news = await this.newsModel.findOne({ _id: id }).exec();
     if (!news) {
       throw new NotFoundException(`Langage with id ${id} not found`);
     }
