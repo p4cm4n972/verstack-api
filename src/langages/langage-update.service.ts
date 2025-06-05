@@ -134,6 +134,26 @@ export class LangageUpdateService {
   
     this.logger.log(`✅ Kotlin synchronisé : ${latest}`);
   }
+
+  // SYNCRO RUBY
+  async updateRuby() {
+    await this.updateFromGitHubRelease('Ruby', 'ruby/ruby');
+  }
+
+  // SYNCRO C#
+  async updateCSharp() {
+    await this.updateFromGitHubRelease('C#', 'dotnet/runtime');
+  }
+
+  // SYNCRO C++
+  async updateCpp() {
+    await this.updateFromGitHubRelease('C++', 'cplusplus/draft');
+  }
+
+  // SYNCRO SCALA
+  async updateScala() {
+    await this.updateFromGitHubRelease('Scala', 'scala/scala');
+  }
   
 
   private githubHeaders(): Record<string, string> {
@@ -240,7 +260,7 @@ export class LangageUpdateService {
 
 
   async updateCustom(nameInDb: string, url: string) {
-    if (url === 'nodejs') {
+    if (url === 'nodejs' || url.includes('nodejs.org')) {
       const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
       const lts = res.data.find((r: any) => r.lts);
       const current = res.data.find((r: any) => !r.lts);
