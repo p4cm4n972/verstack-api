@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AdminController } from './admin.controller';
-import { LangageUpdateService } from 'src/langages/langage-update.service';
+import { LangageUpdateService } from '../langages/langage-update.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { EventEntity, EventSchema } from 'src/events/entities/event.entity/event.entity';
-import { Langage, LangageSchema } from 'src/langages/entities/langage.entity';
+import { EventEntity, EventSchema } from '../events/entities/event.entity/event.entity';
+import { Langage, LangageSchema } from '../langages/entities/langage.entity';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({

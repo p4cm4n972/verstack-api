@@ -1,4 +1,4 @@
-import { LangagesPermission } from "src/langages/langages.permission";
+import { LangagesPermission } from "../langages/langages.permission";
 
 export const Permission = {
     ...LangagesPermission

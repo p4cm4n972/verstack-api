@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
 import { UsersService } from './users.service';
-import { Roles } from 'src/iam/authorization/decorators/roles.decorator';
+import { Roles } from '../iam/authorization/decorators/roles.decorator';
 import { Role } from './enums/role.enum';
 
 @Controller('api/users')

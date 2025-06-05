@@ -6,7 +6,7 @@ import { Langage, LangageSchema } from './entities/langage.entity';
 import {
   EventEntity,
   EventSchema,
-} from 'src/events/entities/event.entity/event.entity';
+} from '../events/entities/event.entity/event.entity';
 import { LangageUpdateService } from './langage-update.service';
 import { HttpModule } from '@nestjs/axios';
 

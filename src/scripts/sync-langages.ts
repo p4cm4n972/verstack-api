@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
-import { LangageUpdateService } from 'src/langages/langage-update.service';
+import { LangageUpdateService } from '../langages/langage-update.service';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);

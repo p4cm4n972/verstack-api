@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
-import { Langage } from './entities/langage.entity';
+import { Langage } from '../langages/entities/langage.entity';
 import { SYNC_LANGAGES, LangageSyncConfig } from './langage-sync.config';
 
 @Injectable()

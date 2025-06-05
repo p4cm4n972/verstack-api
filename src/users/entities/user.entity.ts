@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { Role } from '../enums/role.enum';
-import { Permission, PermissionType } from 'src/iam/permission.type';
+import { Permission, PermissionType } from '../../iam/permission.type';
 
 
 @Schema()

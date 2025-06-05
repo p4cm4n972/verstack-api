@@ -6,7 +6,7 @@ import { News, NewsSchema, Recommendation, RecommendationSchema } from './entiti
 import {
   EventEntity,
   EventSchema,
-} from 'src/events/entities/event.entity/event.entity';
+} from '../events/entities/event.entity/event.entity';
 
 @Module({
   imports: [

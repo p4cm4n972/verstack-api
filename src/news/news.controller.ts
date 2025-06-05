@@ -9,15 +9,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { NewsService } from './news.service';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto/pagination-query.dto';
-import { CreateLangageDto } from 'src/langages/dto/create-langage.dto/create-langage.dto';
-import { UpdateLangageDto } from 'src/langages/dto/update-langage.dto/update-langage.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto/pagination-query.dto';
 import { CreateNewsDto } from './dto/create-news.dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto/update-news.dto';
-import { Auth } from 'src/iam/authentication/decorators/auth.decorator';
-import { AuthType } from 'src/iam/authentication/enums/auth-type.enum';
-import { Roles } from 'src/iam/authorization/decorators/roles.decorator';
-import { Role } from 'src/users/enums/role.enum';
+import { Auth } from '../iam/authentication/decorators/auth.decorator';
+import { AuthType } from '../iam/authentication/enums/auth-type.enum';
+import { Roles } from '../iam/authorization/decorators/roles.decorator';
+import { Role } from '../users/enums/role.enum';
 
 @Controller('api/news')
 export class NewsController {

@@ -3,8 +3,8 @@ import { Langage } from './entities/langage.entity';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { CreateLangageDto } from './dto/create-langage.dto/create-langage.dto';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto/pagination-query.dto';
-import { EventEntity } from 'src/events/entities/event.entity/event.entity';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto/pagination-query.dto';
+import { EventEntity } from '../events/entities/event.entity/event.entity'
 
 @Injectable()
 export class LangagesService {

@@ -1,8 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { Model, Connection } from 'mongoose';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto/pagination-query.dto';
-import { EventEntity } from 'src/events/entities/event.entity/event.entity';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto/pagination-query.dto';
+import { EventEntity } from '../events/entities/event.entity/event.entity';
 import { News, Recommendation } from './entities/news.entity';
 import { CreateNewsDto } from './dto/create-news.dto/create-news.dto';
 

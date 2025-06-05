@@ -8,10 +8,10 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { SignUpDto } from './dto/sign-up.dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto/sign-in.dto';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { HashingService } from '../hashing/hashing.service';
 import { JwtService } from '@nestjs/jwt';
@@ -24,7 +24,7 @@ import {
   RefreshTokenIdsStorage,
 } from './refresh-token-ids.storage/refresh-token-ids.storage';
 import { randomUUID } from 'crypto';
-import { MailService } from 'src/mail.service';
+import { MailService } from '../../mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto/reset-password.dto';
 
 @Injectable()
