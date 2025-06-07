@@ -25,7 +25,7 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
     AdminModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath : ['.env' , '/home/ubuntu/.env'],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
