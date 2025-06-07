@@ -208,16 +208,35 @@ export class LangageUpdateService {
   
 
   async updateFromNpm(nameInDb: string, npmPackage: string, ltsSupport = false) {
-    const res = await firstValueFrom(this.http.get(`https://registry.npmjs.org/${npmPackage}`));
-    const latest = res.data['dist-tags']?.latest;
-    const lts = res.data['dist-tags']?.lts;
+    const res = await firstValueFrom(
+      this.http.get(`https://registry.npmjs.org/${npmPackage}`)
+    );
+
+    const distTags = res.data['dist-tags'] || {};
+    const latest = distTags.latest;
+    let lts = distTags.lts as string | undefined;
+
+    if (ltsSupport && !lts) {
+      if (npmPackage === '@angular/core') {
+        const ltsKeys = Object.keys(distTags).filter(k => /^v\d+-lts$/.test(k));
+        if (ltsKeys.length > 0) {
+          const maxKey = ltsKeys.sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1))).pop();
+          if (maxKey) {
+            lts = distTags[maxKey];
+          }
+        }
+      } else if (npmPackage === 'vue') {
+        lts = distTags.legacy || distTags['v2-latest'];
+      }
+    }
 
     await this.setVersion(nameInDb, 'current', latest);
     if (ltsSupport && lts) {
       await this.setVersion(nameInDb, 'lts', lts);
     }
 
-    this.logger.log(`✅ ${nameInDb} (npm): latest=${latest}${ltsSupport ? `, lts=${lts}` : ''}`);
+    const ltsInfo = ltsSupport && lts ? `, lts=${lts}` : ltsSupport ? ', lts=N/A' : '';
+    this.logger.log(`✅ ${nameInDb} (npm): latest=${latest}${ltsInfo}`);
   }
 
 
