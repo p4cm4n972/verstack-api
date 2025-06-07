@@ -120,8 +120,8 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'PHP',
-  sourceType: 'custom',
-  sourceUrl: 'https://www.php.net/releases/index.php',
+  sourceType: 'github',
+  sourceUrl: 'php/php-src',
   ltsSupport: true,
   },
   {

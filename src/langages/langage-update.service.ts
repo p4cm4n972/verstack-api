@@ -283,13 +283,6 @@ export class LangageUpdateService {
       this.logger.log(`✅ Go (custom): ${latest}`);
     }
 
-    if (url.includes('php.net/releases')) {
-      const res = await firstValueFrom(this.http.get(url));
-      const latest = Object.keys(res.data)[0]; // exemple: "8.3.4"
-    
-      await this.setVersion(nameInDb, 'current', latest);
-      this.logger.log(`✅ PHP (custom): ${latest}`);
-    }
 
     if (url.includes('dotnetcli')) {
       const res = await firstValueFrom(this.http.get(url));
