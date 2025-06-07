@@ -36,7 +36,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   {
   nameInDb: 'Node.js',
   sourceType: 'custom',
-  sourceUrl: 'https://nodejs.org/dist/index.json',
+  sourceUrl: 'nodejs',
   ltsSupport: true,
   },
   {
@@ -89,9 +89,10 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'Python',
-  sourceType: 'custom',
-  sourceUrl: 'https://www.python.org/doc/versions/',
+  sourceType: 'github',
+  sourceUrl: 'python/cpython',
   ltsSupport: true,
+  useTags: true,
   },
   {
   nameInDb: 'Go',
@@ -119,8 +120,8 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'PHP',
-  sourceType: 'custom',
-  sourceUrl: 'https://www.php.net/releases/index.php',
+  sourceType: 'github',
+  sourceUrl: 'php/php-src',
   ltsSupport: true,
   },
   {
@@ -175,6 +176,42 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Ansible',
   sourceType: 'github',
   sourceUrl: 'ansible/ansible',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Swift',
+  sourceType: 'github',
+  sourceUrl: 'apple/swift',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Kotlin',
+  sourceType: 'github',
+  sourceUrl: 'JetBrains/kotlin',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Ruby',
+  sourceType: 'github',
+  sourceUrl: 'ruby/ruby',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'C#',
+  sourceType: 'github',
+  sourceUrl: 'dotnet/runtime',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'C++',
+  sourceType: 'github',
+  sourceUrl: 'cplusplus/draft',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Scala',
+  sourceType: 'github',
+  sourceUrl: 'scala/scala',
   ltsSupport: false,
   },
   ];
