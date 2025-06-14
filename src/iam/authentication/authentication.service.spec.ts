@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { UsersService } from '../../users/users.service';
 import { HashingService } from '../hashing/hashing.service';
@@ -63,6 +63,90 @@ describe('AuthenticationService', () => {
     it('throws when credentials are invalid', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       await expect(service.validateUser('x', 'y')).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('signUp', () => {
+    const dto = { email: 'new@test.com', password: 'pwd' } as any;
+
+    it('creates user and sends confirmation email', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      hashingService.hash.mockResolvedValue('hashed');
+      usersService.create = jest.fn().mockResolvedValue({ _id: '1', email: dto.email });
+      jest.spyOn(service, 'generateEmailVerificationToken').mockResolvedValue('token');
+
+      await service.signUp(dto);
+
+      expect(hashingService.hash).toHaveBeenCalledWith('pwd');
+      expect(usersService.create).toHaveBeenCalledWith(expect.objectContaining({ email: dto.email, password: 'hashed' }));
+      expect(mailService.sendConfirmationEmail).toHaveBeenCalledWith(dto.email, 'token');
+    });
+
+    it('throws when email already exists', async () => {
+      usersService.findByEmail.mockResolvedValue({});
+      await expect(service.signUp(dto)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws when password is missing', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      await expect(service.signUp({ email: 'a' } as any)).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('signIn', () => {
+    const dto = { email: 't', password: 'p' } as any;
+
+    it('returns tokens when credentials are valid and email verified', async () => {
+      const user = { id: 1, _id: '1', password: 'hash', isEmailVerified: true } as any;
+      userModel.findOne.mockResolvedValue(user);
+      hashingService.compare.mockResolvedValue(true);
+      jest.spyOn(service, 'generateTokens').mockResolvedValue({ accessToken: 'a', refreshToken: 'r' } as any);
+
+      const result = await service.signIn(dto);
+
+      expect(result).toEqual({ accessToken: 'a', refreshToken: 'r' });
+      expect(service.generateTokens).toHaveBeenCalledWith(user);
+    });
+
+    it('throws when user does not exist', async () => {
+      userModel.findOne.mockResolvedValue(null);
+      await expect(service.signIn(dto)).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('throws when password mismatch', async () => {
+      const user = { password: 'hash', isEmailVerified: true } as any;
+      userModel.findOne.mockResolvedValue(user);
+      hashingService.compare.mockResolvedValue(false);
+      await expect(service.signIn(dto)).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('throws when email not verified', async () => {
+      const user = { password: 'hash', isEmailVerified: false } as any;
+      userModel.findOne.mockResolvedValue(user);
+      hashingService.compare.mockResolvedValue(true);
+      await expect(service.signIn(dto)).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+  });
+
+  describe('generateTokens', () => {
+    it('signs tokens and stores refresh token id', async () => {
+      const signSpy = jest.spyOn<any, any>(service as any, 'signToken');
+      signSpy.mockResolvedValueOnce('access').mockResolvedValueOnce('refresh');
+      const user = { id: 1, _id: '1', pseudo: 'p', role: 'r', permissions: [] } as any;
+
+      const result = await service.generateTokens(user);
+
+      expect(signSpy).toHaveBeenNthCalledWith(1, 1, config.accessTokenTtl, {
+        pseudo: 'p',
+        id: '1',
+        role: 'r',
+        permissions: [],
+      });
+      expect(signSpy).toHaveBeenNthCalledWith(2, 1, config.refreshTokenTtl, {
+        refreshTokenId: expect.any(String),
+      });
+      expect(refreshTokenIdsStorage.insert).toHaveBeenCalledWith(1, expect.any(String));
+      expect(result).toEqual({ accessToken: 'access', refreshToken: 'refresh' });
     });
   });
 });
