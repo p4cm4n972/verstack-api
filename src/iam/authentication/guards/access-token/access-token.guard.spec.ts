@@ -1,7 +1,9 @@
 import { AccessTokenGuard } from './access-token.guard';
+import { JwtService } from '@nestjs/jwt';
 
 describe('AccessTokenGuard', () => {
   it('should be defined', () => {
-    expect(new AccessTokenGuard()).toBeDefined();
+    const guard = new AccessTokenGuard(new JwtService({}), {} as any);
+    expect(guard).toBeDefined();
   });
 });
