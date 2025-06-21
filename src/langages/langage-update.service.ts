@@ -159,6 +159,76 @@ export class LangageUpdateService {
   async updateScala() {
     await this.updateFromGitHubRelease('Scala', 'scala/scala');
   }
+
+  // SYNCRO EXPRESS
+  async updateExpressJS() {
+    await this.updateFromNpm('Express.js', 'express');
+  }
+
+  // SYNCRO SPRING
+  async updateSpring() {
+    await this.updateFromGitHubRelease('Spring', 'spring-projects/spring-framework');
+  }
+
+  // SYNCRO DJANGO
+  async updateDjango() {
+    await this.updateFromGitHubTag('Django', 'django/django');
+  }
+
+  // SYNCRO JSON
+  async updateJson() {
+    await this.updateCustom('JSON', 'json');
+  }
+
+  // SYNCRO BASH
+  async updateBash() {
+    await this.updateFromGitHubTag('Bash', 'bminor/bash');
+  }
+
+  // SYNCRO ERLANG
+  async updateErlang() {
+    await this.updateFromGitHubRelease('Erlang', 'erlang/otp');
+  }
+
+  // SYNCRO NIM
+  async updateNim() {
+    await this.updateFromGitHubTag('Nim', 'nim-lang/Nim');
+  }
+
+  // SYNCRO V
+  async updateV() {
+    await this.updateFromGitHubRelease('V', 'vlang/v');
+  }
+
+  // SYNCRO WEB ASSEMBLY
+  async updateWebAssembly() {
+    await this.updateFromGitHubTag('Web Assembly', 'WebAssembly/spec');
+  }
+
+  // SYNCRO SQL
+  async updateSql() {
+    await this.updateCustom('SQL', 'sql');
+  }
+
+  // SYNCRO HASKELL
+  async updateHaskell() {
+    await this.updateFromGitHubTag('Haskell', 'ghc/ghc');
+  }
+
+  // SYNCRO CLOJURE
+  async updateClojure() {
+    await this.updateFromGitHubTag('Clojure', 'clojure/clojure');
+  }
+
+  // SYNCRO FLANG
+  async updateFlang() {
+    await this.updateFromGitHubTag('Flang', 'flang-compiler/flang');
+  }
+
+  // SYNCRO OCAML
+  async updateOcaml() {
+    await this.updateFromGitHubRelease('OCaml', 'ocaml/ocaml');
+  }
   
 
   private githubHeaders(): Record<string, string> {
