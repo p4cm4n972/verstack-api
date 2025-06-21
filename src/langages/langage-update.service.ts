@@ -5,6 +5,11 @@ import { Model } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { Langage } from '../langages/entities/langage.entity';
 import { SYNC_LANGAGES, LangageSyncConfig } from './langage-sync.config';
+import { exec as cpExec } from 'child_process';
+import { promisify } from 'util';
+import * as semver from 'semver';
+
+const exec = promisify(cpExec);
 
 @Injectable()
 export class LangageUpdateService {
@@ -279,6 +284,36 @@ export class LangageUpdateService {
 
 
   async updateCustom(nameInDb: string, url: string) {
+    if (url.includes('wch/r-source')) {
+      try {
+        const { stdout } = await exec(
+          'git ls-remote https://github.com/wch/r-source.git "refs/heads/tags/R-*"',
+          { maxBuffer: 1024 * 1024 }
+        );
+        const tags = stdout
+          .split('\n')
+          .map(line => line.split('\t')[1])
+          .filter(Boolean)
+          .map(ref => ref.replace('refs/heads/tags/', ''));
+        const versions = tags.map(t => t.replace(/^R-/, '').replace(/-/g, '.'));
+        const latest = versions.sort(semver.rcompare)[0];
+        if (latest) {
+          const res = await firstValueFrom(
+            this.http.get(
+              `https://raw.githubusercontent.com/wch/r-source/tags/R-${latest.replace(/\./g, '-')}/VERSION`
+            )
+          );
+          const version = res.data.trim().split(' ')[0];
+          await this.setVersion(nameInDb, 'current', version);
+          this.logger.log(`✅ ${nameInDb} (custom): ${version}`);
+        } else {
+          this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
+        }
+      } catch (err: any) {
+        this.logger.error(`❌ ${nameInDb}: ${err.message}`);
+      }
+      return;
+    }
     if (url === 'nodejs' || url.includes('nodejs.org')) {
       const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
       const lts = res.data.find((r: any) => r.lts);

@@ -282,7 +282,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'R',
-  sourceType: 'github',
+  sourceType: 'custom',
   sourceUrl: 'wch/r-source',
   ltsSupport: false,
   useTags: true,
