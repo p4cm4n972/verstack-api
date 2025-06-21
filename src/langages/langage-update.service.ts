@@ -286,26 +286,31 @@ export class LangageUpdateService {
   async updateCustom(nameInDb: string, url: string) {
     if (url.includes('wch/r-source')) {
       try {
-        const { stdout } = await exec(
-          'git ls-remote https://github.com/wch/r-source.git "refs/heads/tags/R-*"',
-          { maxBuffer: 1024 * 1024 }
-        );
-        const tags = stdout
-          .split('\n')
-          .map(line => line.split('\t')[1])
-          .filter(Boolean)
-          .map(ref => ref.replace('refs/heads/tags/', ''));
-        const versions = tags.map(t => t.replace(/^R-/, '').replace(/-/g, '.'));
-        const latest = versions.sort(semver.rcompare)[0];
-        if (latest) {
+        const branches: string[] = [];
+        for (let page = 1; page <= 5; page++) {
           const res = await firstValueFrom(
-            this.http.get(
-              `https://raw.githubusercontent.com/wch/r-source/tags/R-${latest.replace(/\./g, '-')}/VERSION`
-            )
+            this.http.get(`https://api.github.com/repos/wch/r-source/branches`, {
+              params: { per_page: 100, page },
+              headers: this.githubHeaders()
+            })
           );
-          const version = res.data.trim().split(' ')[0];
-          await this.setVersion(nameInDb, 'current', version);
-          this.logger.log(`✅ ${nameInDb} (custom): ${version}`);
+          branches.push(
+            ...res.data
+              .map((b: any) => b.name)
+              .filter((n: string) => n.startsWith('tags/R-'))
+          );
+          if (res.data.length < 100) break;
+        }
+        const versions = branches
+          .map(b => b.replace('tags/R-', '').replace(/-/g, '.'))
+          .map(v => semver.coerce(v)?.version)
+          .filter((v): v is string => Boolean(v));
+
+        const latest = versions.sort(semver.rcompare)[0];
+
+        if (latest) {
+          await this.setVersion(nameInDb, 'current', latest);
+          this.logger.log(`✅ ${nameInDb} (custom): ${latest}`);
         } else {
           this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
         }
