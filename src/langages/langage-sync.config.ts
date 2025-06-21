@@ -282,7 +282,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'R',
-  sourceType: 'github',
+  sourceType: 'custom',
   sourceUrl: 'wch/r-source',
   ltsSupport: false,
   },
@@ -291,6 +291,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   sourceType: 'github',
   sourceUrl: 'Perl/perl5',
   ltsSupport: false,
+  useTags: true,
   },
   {
   nameInDb: 'Unity',
