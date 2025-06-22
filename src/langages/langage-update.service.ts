@@ -159,6 +159,76 @@ export class LangageUpdateService {
   async updateScala() {
     await this.updateFromGitHubRelease('Scala', 'scala/scala');
   }
+
+  // SYNCRO EXPRESS
+  async updateExpressJS() {
+    await this.updateFromNpm('Express.js', 'express');
+  }
+
+  // SYNCRO SPRING
+  async updateSpring() {
+    await this.updateFromGitHubRelease('Spring', 'spring-projects/spring-framework');
+  }
+
+  // SYNCRO DJANGO
+  async updateDjango() {
+    await this.updateFromGitHubTag('Django', 'django/django', '4.2');
+  }
+
+  // SYNCRO JSON
+  async updateJson() {
+    await this.updateCustom('JSON', 'json');
+  }
+
+  // SYNCRO BASH
+  async updateBash() {
+    await this.updateFromGitHubTag('Bash', 'bminor/bash');
+  }
+
+  // SYNCRO ERLANG
+  async updateErlang() {
+    await this.updateFromGitHubRelease('Erlang', 'erlang/otp');
+  }
+
+  // SYNCRO NIM
+  async updateNim() {
+    await this.updateFromGitHubTag('Nim', 'nim-lang/Nim');
+  }
+
+  // SYNCRO V
+  async updateV() {
+    await this.updateFromGitHubRelease('V', 'vlang/v');
+  }
+
+  // SYNCRO WEB ASSEMBLY
+  async updateWebAssembly() {
+    await this.updateFromGitHubTag('Web Assembly', 'WebAssembly/spec');
+  }
+
+  // SYNCRO SQL
+  async updateSql() {
+    await this.updateCustom('SQL', 'sql');
+  }
+
+  // SYNCRO HASKELL
+  async updateHaskell() {
+    await this.updateFromGitHubTag('Haskell', 'ghc/ghc');
+  }
+
+  // SYNCRO CLOJURE
+  async updateClojure() {
+    await this.updateFromGitHubTag('Clojure', 'clojure/clojure');
+  }
+
+  // SYNCRO FLANG
+  async updateFlang() {
+    await this.updateFromGitHubTag('Flang', 'flang-compiler/flang');
+  }
+
+  // SYNCRO OCAML
+  async updateOcaml() {
+    await this.updateFromGitHubRelease('OCaml', 'ocaml/ocaml');
+  }
   
 
   private githubHeaders(): Record<string, string> {
@@ -187,9 +257,15 @@ export class LangageUpdateService {
             await this.updateFromNpm(lang.nameInDb, lang.sourceUrl, lang.ltsSupport);
             break;
           case 'github':
-            lang.useTags
-              ? await this.updateFromGitHubTag(lang.nameInDb, lang.sourceUrl)
-              : await this.updateFromGitHubRelease(lang.nameInDb, lang.sourceUrl);
+            if (lang.useTags) {
+              await this.updateFromGitHubTag(
+                lang.nameInDb,
+                lang.sourceUrl,
+                lang.ltsTagPrefix
+              );
+            } else {
+              await this.updateFromGitHubRelease(lang.nameInDb, lang.sourceUrl);
+            }
             break;
           case 'custom':
             await this.updateCustom(lang.nameInDb, lang.sourceUrl);
@@ -246,22 +322,50 @@ export class LangageUpdateService {
 
 
 
-  async updateFromGitHubTag(nameInDb: string, repo: string) {
-  const res = await firstValueFrom(
-    this.http.get(`https://api.github.com/repos/${repo}/tags`, {
-      headers: this.githubHeaders()
-    })
-  );
+  async updateFromGitHubTag(
+    nameInDb: string,
+    repo: string,
+    ltsTagPrefix?: string
+  ) {
+    const tags: string[] = [];
+    for (let page = 1; page <= 5; page++) {
+      const res = await firstValueFrom(
+        this.http.get(`https://api.github.com/repos/${repo}/tags`, {
+          params: { per_page: 100, page },
+          headers: this.githubHeaders()
+        })
+      );
+      tags.push(...res.data.map((t: any) => t.name));
+      if (res.data.length < 100) break;
+    }
 
-  const version = res.data?.[0]?.name?.replace(/^v/, '') ?? null;
+    const versionRegex = /\d+\.\d+/;
+    const versions = tags
+      .filter(t => versionRegex.test(t))
+      .map(t => semver.coerce(t)?.version)
+      .filter((v): v is string => Boolean(v))
+      .sort(semver.rcompare);
 
-  if (version) {
-    await this.setVersion(nameInDb, 'current', version);
-    this.logger.log(`✅ ${nameInDb} (GitHub tags) : ${version}`);
-  } else {
-    this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
+    const latest = versions[0];
+    if (latest) {
+      await this.setVersion(nameInDb, 'current', latest);
+    }
+
+    let lts: string | undefined;
+    if (ltsTagPrefix) {
+      lts = versions.find(v => v.startsWith(ltsTagPrefix));
+      if (lts) {
+        await this.setVersion(nameInDb, 'lts', lts);
+      }
+    }
+
+    const ltsInfo = ltsTagPrefix ? `, lts=${lts ?? 'N/A'}` : '';
+    if (latest) {
+      this.logger.log(`✅ ${nameInDb} (GitHub tags): latest=${latest}${ltsInfo}`);
+    } else {
+      this.logger.warn(`⚠️ Aucune version trouvée pour ${nameInDb}`);
+    }
   }
-}
 
   async updateFromGitHubRelease(nameInDb: string, repo: string) {
     const res = await firstValueFrom(

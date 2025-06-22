@@ -5,6 +5,8 @@ export interface LangageSyncConfig {
   sourceType: SyncSourceType;
   sourceUrl: string;
   ltsSupport?: boolean;
+  /** Prefix of the tag to identify the latest LTS version when using GitHub tags */
+  ltsTagPrefix?: string;
   useTags?: boolean; // For GitHub, use tags instead of releases
 }
 
@@ -298,6 +300,98 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Unity',
   sourceType: 'custom',
   sourceUrl: 'unity',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Express.js',
+  sourceType: 'npm',
+  sourceUrl: 'express',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Spring',
+  sourceType: 'github',
+  sourceUrl: 'spring-projects/spring-framework',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Django',
+  sourceType: 'github',
+  sourceUrl: 'django/django',
+  ltsSupport: true,
+  ltsTagPrefix: '4.2',
+  useTags: true,
+  },
+  {
+  nameInDb: 'JSON',
+  sourceType: 'custom',
+  sourceUrl: 'json',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Bash',
+  sourceType: 'github',
+  sourceUrl: 'bminor/bash',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'Erlang',
+  sourceType: 'github',
+  sourceUrl: 'erlang/otp',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Nim',
+  sourceType: 'github',
+  sourceUrl: 'nim-lang/Nim',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'V',
+  sourceType: 'github',
+  sourceUrl: 'vlang/v',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Web Assembly',
+  sourceType: 'github',
+  sourceUrl: 'WebAssembly/spec',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'SQL',
+  sourceType: 'custom',
+  sourceUrl: 'sql',
+  ltsSupport: false,
+  },
+  {
+  nameInDb: 'Haskell',
+  sourceType: 'github',
+  sourceUrl: 'ghc/ghc',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'Clojure',
+  sourceType: 'github',
+  sourceUrl: 'clojure/clojure',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'Flang',
+  sourceType: 'github',
+  sourceUrl: 'flang-compiler/flang',
+  ltsSupport: false,
+  useTags: true,
+  },
+  {
+  nameInDb: 'OCaml',
+  sourceType: 'github',
+  sourceUrl: 'ocaml/ocaml',
   ltsSupport: false,
   },
   ];
