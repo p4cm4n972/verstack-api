@@ -5,6 +5,8 @@ export interface LangageSyncConfig {
   sourceType: SyncSourceType;
   sourceUrl: string;
   ltsSupport?: boolean;
+  /** Prefix of the tag to identify the latest LTS version when using GitHub tags */
+  ltsTagPrefix?: string;
   useTags?: boolean; // For GitHub, use tags instead of releases
 }
 
@@ -316,7 +318,8 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Django',
   sourceType: 'github',
   sourceUrl: 'django/django',
-  ltsSupport: false,
+  ltsSupport: true,
+  ltsTagPrefix: '4.2',
   useTags: true,
   },
   {
