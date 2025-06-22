@@ -339,7 +339,9 @@ export class LangageUpdateService {
       if (res.data.length < 100) break;
     }
 
+    const versionRegex = /\d+\.\d+/;
     const versions = tags
+      .filter(t => versionRegex.test(t))
       .map(t => semver.coerce(t)?.version)
       .filter((v): v is string => Boolean(v))
       .sort(semver.rcompare);
