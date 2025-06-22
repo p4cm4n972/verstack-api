@@ -127,7 +127,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'PHP',
   sourceType: 'github',
   sourceUrl: 'php/php-src',
-  ltsSupport: true,
+  ltsSupport: false,
   },
   {
   nameInDb: 'Redis',
@@ -157,7 +157,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Laravel',
   sourceType: 'github',
   sourceUrl: 'laravel/laravel',
-  ltsSupport: true,
+  ltsSupport: false,
   },
   {
   nameInDb: 'Bootstrap',
@@ -321,7 +321,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Django',
   sourceType: 'github',
   sourceUrl: 'django/django',
-  ltsSupport: true,
+  ltsSupport: false,
   ltsTagPrefix: '4.2',
   useTags: true,
   },

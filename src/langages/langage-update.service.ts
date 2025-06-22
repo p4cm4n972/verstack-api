@@ -172,7 +172,8 @@ export class LangageUpdateService {
       headers: this.githubHeaders()
     }));
 
-    const version = res.data?.tag_name?.replace(/^v/, '') ?? null;
+    const rawVersion = res.data?.tag_name ?? null;
+    const version = rawVersion ? this.normalizeLabel(config.nameInDb, rawVersion) : null;
     const releaseDate = res.data?.published_at ?? null;
 
     if (version) {
