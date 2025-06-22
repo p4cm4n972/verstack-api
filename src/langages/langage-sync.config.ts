@@ -82,12 +82,14 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   sourceType: 'github',
   sourceUrl: 'electron/electron',
   ltsSupport: false,
+  useTags: true
   },
   {
   nameInDb: 'Flutter',
   sourceType: 'github',
   sourceUrl: 'flutter/flutter',
   ltsSupport: false,
+  useTags: true
   },
   {
   nameInDb: 'Python',
@@ -95,6 +97,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   sourceUrl: 'python/cpython',
   ltsSupport: true,
   useTags: true,
+  ltsTagPrefix: '3.10'
   },
   {
   nameInDb: 'Go',
