@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { Model, Connection } from 'mongoose';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto/pagination-query.dto';
@@ -130,4 +130,25 @@ export class NewsService {
     return article.save();
   }
   
+  async recommend(newsId: string, userId: string) {
+    const news = await this.newsModel.findById(newsId);
+    if (!news) throw new NotFoundException('News not found');
+    if (news.likedBy.includes(userId)) throw new BadRequestException('Already recommended');
+
+    news.likedBy.push(userId);
+    news.recommendations = news.likedBy.length;
+    await news.save();
+    return news;
+  }
+
+  async unrecommend(newsId: string, userId: string) {
+    const news = await this.newsModel.findById(newsId);
+    if (!news) throw new NotFoundException('News not found');
+    if (!news.likedBy.includes(userId)) throw new BadRequestException('Not recommended yet');
+
+    news.likedBy = news.likedBy.filter(id => id !== userId);
+    news.recommendations = news.likedBy.length;
+    await news.save();
+    return news;
+  }
 }

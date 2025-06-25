@@ -53,4 +53,16 @@ export class NewsController {
   remove(@Param('id') id: string) {
     return this.newsService.remove(id);
   }
+
+  @Auth(AuthType.None)
+  @Post(':id/recommend')
+  async recommend(@Param('id') id: string, @Body('userId') userId: string) {
+    return this.newsService.recommend(id, userId);
+  }
+
+  @Auth(AuthType.None)
+  @Post(':id/unrecommend')
+  async unrecommend(@Param('id') id: string, @Body('userId') userId: string) {
+    return this.newsService.unrecommend(id, userId);
+  }
 }
