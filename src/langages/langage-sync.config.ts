@@ -5,12 +5,31 @@ export interface LangageSyncConfig {
   sourceType: SyncSourceType;
   sourceUrl: string;
   ltsSupport?: boolean;
-  /** Prefix of the tag to identify the latest LTS version when using GitHub tags */
   ltsTagPrefix?: string;
-  useTags?: boolean; // For GitHub, use tags instead of releases
+  useTags?: boolean;
+  edition?: string; // Ajout pour les versions "édition"
+  livingStandard?: boolean; // Ajout pour les normes vivantes (ex: HTML)
 }
 
 export const SYNC_LANGAGES: LangageSyncConfig[] =  [
+  {
+    nameInDb: 'HTML',
+    sourceType: 'custom',
+    sourceUrl: 'html',
+    livingStandard: true
+  },
+  {
+    nameInDb: 'CSS',
+    sourceType: 'custom',
+    sourceUrl: 'css',
+    livingStandard: true
+  },{
+  nameInDb: 'JavaScript',
+  sourceType: 'custom',
+  sourceUrl: 'https://tc39.es/ecma262/',
+  edition: undefined
+}
+,
   {
   nameInDb: 'Angular',
   sourceType: 'npm',
@@ -120,7 +139,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   {
   nameInDb: 'Java',
   sourceType: 'custom',
-  sourceUrl: 'https://api.adoptium.net/v3/info/release_versions',
+  sourceUrl: 'https://api.adoptium.net/v3/assets/feature_releases?jvm_impl=hotspot&image_type=jdk&os=linux&page=0&page_size=100&project=jdk&sort_order=DESC',
   ltsSupport: true,
   },
   {

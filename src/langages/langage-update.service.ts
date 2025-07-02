@@ -9,17 +9,21 @@ import * as semver from 'semver';
 
 @Injectable()
 export class LangageUpdateService {
+  private readonly logger = new Logger(LangageUpdateService.name);
+
+  constructor(
+    @InjectModel(Langage.name) private readonly langageModel: Model<Langage>,
+    private readonly http: HttpService
+  ) { }
 
   private normalizeLabel(name: string, label: string): string {
     if (!label) return '';
     switch (name.toLowerCase()) {
       case 'php': {
-        // Extrait le numéro de version (ex: "php-8.4.8" => "8.4.8")
         const match = label.match(/(\d+\.\d+\.\d+)/);
         return match ? match[1] : label.replace(/^php-/, '');
       }
       case 'swift': {
-        // Extrait le numéro de version (ex: "swift-6.1.2-RELEASE" => "6.1.2")
         const match = label.match(/(\d+\.\d+\.\d+)/);
         return match ? match[1] : label.replace(/^swift-/, '').replace(/-RELEASE$/, '');
       }
@@ -33,26 +37,10 @@ export class LangageUpdateService {
         return label.replace(/^OTP-/, '');
       case 'ocaml':
         return label.replace(/^ocaml-/, '');
-      case 'rust':
-      case 'redis':
-      case 'laravel':
-      case 'bootstrap':
-      case 'docker':
-      case 'kubernetes':
-      case 'ansible':
-      case 'v':
-        return label.trim();  // passthrough but allows override
       default:
-        return label;
+        return label.trim();
     }
   }
-
-  private readonly logger = new Logger(LangageUpdateService.name);
-
-  constructor(
-    @InjectModel(Langage.name) private readonly langageModel: Model<Langage>,
-    private readonly http: HttpService
-  ) {}
 
   private githubHeaders(): Record<string, string> {
     return {
@@ -133,6 +121,14 @@ export class LangageUpdateService {
       await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
     }
 
+    if (config.edition) {
+      await this.setVersion(config.nameInDb, 'edition', this.normalizeLabel(config.nameInDb, config.edition));
+    }
+
+    if (config.livingStandard) {
+      await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
+    }
+
     const ltsInfo = config.ltsSupport && lts ? `, lts=${lts}` : config.ltsSupport ? ', lts=N/A' : '';
     this.logger.log(`✅ ${config.nameInDb} (npm): latest=${latest}${ltsInfo}`);
   }
@@ -163,6 +159,14 @@ export class LangageUpdateService {
       if (lts) await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
     }
 
+    if (config.edition) {
+      await this.setVersion(config.nameInDb, 'edition', this.normalizeLabel(config.nameInDb, config.edition));
+    }
+
+    if (config.livingStandard) {
+      await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
+    }
+
     const ltsInfo = config.ltsSupport ? `, lts=${config.ltsTagPrefix ?? 'N/A'}` : '';
     this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest}${ltsInfo}`);
   }
@@ -178,56 +182,116 @@ export class LangageUpdateService {
 
     if (version) {
       await this.setVersion(config.nameInDb, 'current', version, releaseDate);
-      this.logger.log(`✅ ${config.nameInDb} (GitHub releases) : ${version}`);
+      this.logger.log(`✅ ${config.nameInDb} (GitHub releases): current=${version}`);
     } else {
       this.logger.warn(`⚠️ Aucune version trouvée pour ${config.nameInDb}`);
+    }
+
+    if (config.edition) {
+      await this.setVersion(config.nameInDb, 'edition', this.normalizeLabel(config.nameInDb, config.edition));
+    }
+
+    if (config.livingStandard) {
+      await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
     }
   }
 
   async updateCustom(config: LangageSyncConfig) {
-  try {
-    if (config.sourceUrl === 'nodejs') {
-      const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
-      const all = res.data;
+    try {
+      if (config.sourceUrl === 'nodejs') {
+        const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
+        const all = res.data;
 
-      const lts = all
-        .filter((r: any) => r.lts)
-        .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
+        const lts = all.filter((r: any) => r.lts)
+          .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
 
-      const current = all
-        .filter((r: any) => !r.lts)
-        .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
+        const current = all.filter((r: any) => !r.lts)
+          .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
 
-      if (current) {
-        await this.setVersion(config.nameInDb, 'current', current.version.replace(/^v/, ''), current.date);
+        if (current) await this.setVersion(config.nameInDb, 'current', current.version.replace(/^v/, ''), current.date);
+        if (lts) await this.setVersion(config.nameInDb, 'lts', lts.version.replace(/^v/, ''), lts.date);
+
+        this.logger.log(`✅ Node.js: current=${current?.version}, lts=${lts?.version}`);
       }
 
-      if (lts) {
-        await this.setVersion(config.nameInDb, 'lts', lts.version.replace(/^v/, ''), lts.date);
+      if (config.sourceUrl.includes('go.dev')) {
+        const res = await firstValueFrom(this.http.get(config.sourceUrl));
+        const stable = res.data.find((v: any) => v.stable);
+
+        if (stable?.version) {
+          const latest = stable.version.replace(/^go/, '');
+          await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+          this.logger.log(`✅ Go (custom): current=${latest}`);
+        } else {
+          this.logger.warn(`⚠️ Aucune version stable trouvée pour Go`);
+        }
+      }
+      if (config.livingStandard) {
+        await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
+        this.logger.log(`✅ ${config.nameInDb} (custom): livingStandard`);
       }
 
-      this.logger.log(`✅ Node.js: current=${current?.version}, lts=${lts?.version}`);
+      if (config.edition) {
+        await this.setVersion(config.nameInDb, 'edition', config.edition);
+        this.logger.log(`✅ ${config.nameInDb} (custom): edition=${config.edition}`);
+      }
+
+      if (config.nameInDb === 'Java') {
+        const info = await firstValueFrom(this.http.get('https://api.adoptium.net/v3/info/available_releases'));
+        const available = info.data.available_releases as number[];
+        const ltsReleases = new Set(info.data.lts_releases as number[]);
+        const currentVersion = Math.max(...available);
+
+        const res = await firstValueFrom(this.http.get(
+          `https://api.adoptium.net/v3/assets/feature_releases/${currentVersion}/ga?jvm_impl=hotspot&image_type=jdk&os=linux&page=0&page_size=1&sort_order=DESC`
+        ));
+
+        const entry = res.data[0];
+        const semver = entry?.version_data?.semver ?? null;
+        const releaseDate = entry?.release_date ?? null;
+
+        if (semver) {
+          const cleanVersion = semver.split('+')[0]; // remove build metadata
+          await this.setVersion(config.nameInDb, 'current', cleanVersion, releaseDate);
+
+          if (ltsReleases.has(currentVersion)) {
+            await this.setVersion(config.nameInDb, 'lts', cleanVersion, releaseDate);
+          }
+
+          this.logger.log(`✅ Java (custom): current=${cleanVersion}${ltsReleases.has(currentVersion) ? `, lts=${cleanVersion}` : ''}`);
+        } else {
+          this.logger.warn(`⚠️ Java (custom): aucune version trouvée`);
+        }
+      }
+
+      if (config.nameInDb === 'JavaScript') {
+        const res = await firstValueFrom(
+          this.http.get('https://en.wikipedia.org/wiki/ECMAScript', { responseType: 'text' as any })
+        );
+
+        const match = res.data.match(/ECMAScript\s+(\d{4})/);
+        if (match && match[1]) {
+          const edition = match[1];
+          await this.setVersion(config.nameInDb, 'edition', edition);
+          this.logger.log(`✅ JavaScript (Wikipedia): edition=${edition}`);
+        } else {
+          this.logger.warn(`⚠️ Impossible de trouver l'édition ECMAScript`);
+        }
+        return;
+      }
+
+
+
+
+
+
+
+
+
+
+    } catch (error) {
+      this.logger.error(`❌ Erreur updateCustom [${config.nameInDb}]:`, error);
+      throw error;
     }
-
-    if (config.sourceUrl.includes('go.dev')) {
-      const res = await firstValueFrom(this.http.get(config.sourceUrl));
-      const stable = res.data.find((v: any) => v.stable);
-
-      if (stable?.version) {
-        const latest = stable.version.replace(/^go/, '');
-        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
-        this.logger.log(`✅ Go (custom): current=${latest}`);
-      } else {
-        this.logger.warn(`⚠️ Aucune version stable trouvée pour Go`);
-      }
-    }
-
-    // Ajoute ici d'autres cas "custom" si nécessaire
-
-  } catch (error) {
-    this.logger.error(`❌ Erreur updateCustom [${config.nameInDb}]:`, error);
-    throw error;
   }
-}
-
 }
