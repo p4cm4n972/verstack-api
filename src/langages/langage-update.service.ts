@@ -50,17 +50,41 @@ export class LangageUpdateService {
   }
 
   private async setVersion(name: string, type: string, label: string, releaseDate?: string) {
-    await this.langageModel.updateOne(
-      { name },
-      {
-        $set: {
-          'versions.$[v].label': label,
-          'versions.$[v].releaseDate': releaseDate || new Date().toISOString()
+    const langage = await this.langageModel.findOne({ name });
+
+    if (!langage) {
+      this.logger.warn(`⚠️ Langage "${name}" introuvable en base`);
+      return;
+    }
+
+    const existing = langage.versions.find(v => v.type === type);
+
+    if (existing) {
+      await this.langageModel.updateOne(
+        { name, 'versions.type': type },
+        {
+          $set: {
+            'versions.$.label': label,
+            'versions.$.releaseDate': releaseDate || new Date().toISOString()
+          }
         }
-      },
-      { arrayFilters: [{ 'v.type': type }] }
-    );
+      );
+    } else {
+      await this.langageModel.updateOne(
+        { name },
+        {
+          $push: {
+            versions: {
+              type,
+              label,
+              releaseDate: releaseDate || new Date().toISOString()
+            }
+          }
+        }
+      );
+    }
   }
+
 
   async syncAll(): Promise<{ success: string[]; failed: { name: string; error: string }[] }> {
     const success: string[] = [];
@@ -135,6 +159,7 @@ export class LangageUpdateService {
 
   async updateFromGitHubTag(config: LangageSyncConfig) {
     const tags: string[] = [];
+
     for (let page = 1; page <= 5; page++) {
       const res = await firstValueFrom(this.http.get(`https://api.github.com/repos/${config.sourceUrl}/tags`, {
         params: { per_page: 100, page },
@@ -143,7 +168,42 @@ export class LangageUpdateService {
       tags.push(...res.data.map((t: any) => t.name));
       if (res.data.length < 100) break;
     }
+    if (config.nameInDb === 'C++' && config.standardSupport) {
+      const drafts = tags.filter(t => /^n\d{4}$/.test(t)).sort().reverse();
+      const latestDraft = drafts[0];
 
+      // Met à jour le draft comme version "standard"
+      if (latestDraft) {
+        await this.setVersion(config.nameInDb, 'standard', latestDraft);
+        this.logger.log(`📘 ${config.nameInDb} (draft): standard=${latestDraft}`);
+      }
+
+      // Fixe manuellement le standard courant (ex: "C++23")
+      const currentStandard = 'C++23';
+      await this.setVersion(config.nameInDb, 'current', currentStandard);
+    }
+
+
+
+
+    if (['JavaScript', 'ECMAScript'].includes(config.nameInDb)) {
+      // Rechercher les tags du type "es2024", "es2023", etc.
+      const editions = tags
+        .filter(t => /^es\d{4}$/i.test(t))
+        .map(t => t.toUpperCase()) // ex: "ES2024"
+        .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+      const latestEdition = editions[0];
+      if (latestEdition) {
+        await this.setVersion(config.nameInDb, 'edition', latestEdition);
+        this.logger.log(`✅ ${config.nameInDb} (GitHub tags): edition=${latestEdition}`);
+      } else {
+        this.logger.warn(`⚠️ Impossible de trouver l'édition ECMAScript pour ${config.nameInDb}`);
+      }
+      return; // Évite le traitement standard
+    }
+
+    // Traitement standard
     const versionRegex = /\d+\.\d+/;
     const versions = tags
       .filter(t => versionRegex.test(t))
@@ -152,24 +212,21 @@ export class LangageUpdateService {
       .sort(semver.rcompare);
 
     const latest = versions[0];
-    if (latest) await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    if (latest) {
+      await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    }
 
     if (config.ltsSupport && config.ltsTagPrefix) {
       const lts = versions.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
-      if (lts) await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
-    }
-
-    if (config.edition) {
-      await this.setVersion(config.nameInDb, 'edition', this.normalizeLabel(config.nameInDb, config.edition));
-    }
-
-    if (config.livingStandard) {
-      await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
+      if (lts) {
+        await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
+      }
     }
 
     const ltsInfo = config.ltsSupport ? `, lts=${config.ltsTagPrefix ?? 'N/A'}` : '';
     this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest}${ltsInfo}`);
   }
+
 
   async updateFromGitHubRelease(config: LangageSyncConfig) {
     const res = await firstValueFrom(this.http.get(`https://api.github.com/repos/${config.sourceUrl}/releases/latest`, {
@@ -198,6 +255,130 @@ export class LangageUpdateService {
 
   async updateCustom(config: LangageSyncConfig) {
     try {
+      if (config.nameInDb === 'Ruby') {
+        try {
+          const res = await firstValueFrom(
+            this.http.get('https://www.ruby-lang.org/en/downloads/', {
+              responseType: 'text' as any,
+            })
+          );
+
+          const match = res.data.match(/Stable releases:[^]*?Ruby\s+(\d+\.\d+\.\d+)/i);
+          if (match?.[1]) {
+            const version = match[1];
+            await this.setVersion('Ruby', 'current', version);
+            this.logger.log(`✅ Ruby (custom): current=${version}`);
+          } else {
+            this.logger.warn(`⚠️ Ruby (custom): impossible de détecter la version`);
+          }
+        } catch (error) {
+          this.logger.error(`❌ Erreur updateCustom [Ruby]:`, error);
+        }
+        return;
+      }
+
+      if (config.nameInDb === 'C') {
+        const res = await firstValueFrom(this.http.get(
+          'https://en.wikipedia.org/wiki/C_(programming_language)',
+          { responseType: 'text' as any }
+        ));
+        const wiki = res.data;
+
+        const found: Array<{ version: string; date?: string }> = [];
+        ['C23', 'C17', 'C11', 'C99'].forEach(ver => {
+          const regex = new RegExp(`${ver}.*?(?:ISO\\/IEC \\d+:\\d{4})`, 'i');
+          if (regex.test(wiki)) found.push({ version: ver });
+        });
+
+        if (found.length) {
+          for (const std of found) {
+            await this.setVersion('C', 'standard', std.version);
+          }
+          // Définir 'current' sur le premier standard détecté (le plus récent)
+          const current = found[0].version;
+          await this.setVersion('C', 'current', current);
+          this.logger.log(`📘 C (custom): standards=${found.map(f => f.version).join(', ')}, current=${current}`);
+        } else {
+          this.logger.warn('⚠️ C (custom): aucun standard détecté');
+        }
+        return;
+      }
+
+      if (config.nameInDb === 'MATLAB') {
+        const res = await firstValueFrom(this.http.get(
+          'https://www.mathworks.com/products/new_products/latest_features.html',
+          { responseType: 'text' as any }
+        ));
+
+        const match = res.data.match(/R(\d{4}[ab])/i); // ex: R2025a
+        if (match?.[1]) {
+          const raw = match[1]; // exemple : "2025a"
+          const numeric = raw.slice(0, 4) + (raw.endsWith('a') ? '.1' : '.2');
+          await this.setVersion('MATLAB', 'current', numeric);
+          this.logger.log(`✅ MATLAB (custom): current=${numeric}`);
+        } else {
+          this.logger.warn(`⚠️ MATLAB (custom): impossible de détecter la version`);
+        }
+      }
+
+      if (config.nameInDb === 'R') {
+        try {
+          const res = await firstValueFrom(
+            this.http.get('https://api.r-hub.io/rversions/r-release')
+          );
+          const latest = res.data?.version;
+          const date = res.data?.date;
+          if (latest) {
+            await this.setVersion('R', 'current', latest, date);
+            this.logger.log(`✅ R (custom via r-hub): current=${latest}`);
+          } else {
+            this.logger.warn(`⚠️ R (custom): version introuvable`);
+          }
+        } catch (err) {
+          this.logger.error(`❌ Erreur updateCustom [R]:`, err);
+        }
+        return;
+      }
+
+
+      if (config.nameInDb === 'Unity') {
+        try {
+          const res = await firstValueFrom(
+            this.http.get('https://public-cdn.cloud.unity3d.com/hub/prod/releases-linux.json')
+          );
+          const data = res.data;
+
+          const official = data.official;
+          const ltsList = data.lts;
+
+          const latest = official?.[0]?.version;
+          const lts = ltsList?.[0]?.version;
+
+          if (latest) {
+            await this.setVersion('Unity', 'current', latest);
+            this.logger.log(`✅ Unity (custom): current=${latest}`);
+          }
+
+          if (lts) {
+            await this.setVersion('Unity', 'lts', lts);
+            this.logger.log(`✅ Unity (custom): lts=${lts}`);
+          }
+
+        } catch (err) {
+          this.logger.error('❌ Erreur updateCustom [Unity]', err);
+        }
+        return;
+      }
+
+
+
+
+
+
+
+
+
+
       if (config.sourceUrl === 'nodejs') {
         const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
         const all = res.data;
@@ -264,21 +445,35 @@ export class LangageUpdateService {
         }
       }
 
-      if (config.nameInDb === 'JavaScript') {
-        const res = await firstValueFrom(
-          this.http.get('https://en.wikipedia.org/wiki/ECMAScript', { responseType: 'text' as any })
-        );
+      if (config.sourceUrl.includes('dart-archive')) {
+        const res = await firstValueFrom(this.http.get(config.sourceUrl));
+        const version = res.data?.version;
 
-        const match = res.data.match(/ECMAScript\s+(\d{4})/);
-        if (match && match[1]) {
-          const edition = match[1];
-          await this.setVersion(config.nameInDb, 'edition', edition);
-          this.logger.log(`✅ JavaScript (Wikipedia): edition=${edition}`);
+        if (version) {
+          await this.setVersion(config.nameInDb, 'current', version);
+          this.logger.log(`✅ Dart (custom): current=${version}`);
         } else {
-          this.logger.warn(`⚠️ Impossible de trouver l'édition ECMAScript`);
+          this.logger.warn(`⚠️ Impossible de récupérer la version de Dart`);
+        }
+
+        return;
+      }
+
+      if (config.nameInDb === 'MongoDB') {
+        const res = await firstValueFrom(this.http.get(config.sourceUrl, { responseType: 'text' as any }));
+        const match = res.data.match(/(\d+\.\d+\.\d+)\s+\(current\)/i);
+        if (match && match[1]) {
+          const version = match[1];
+          await this.setVersion(config.nameInDb, 'current', version);
+          this.logger.log(`✅ MongoDB (custom): current=${version}`);
+        } else {
+          this.logger.warn(`⚠️ MongoDB (custom): impossible de trouver la version sur la page`);
         }
         return;
       }
+
+
+
 
 
 

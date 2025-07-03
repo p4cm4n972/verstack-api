@@ -7,8 +7,9 @@ export interface LangageSyncConfig {
   ltsSupport?: boolean;
   ltsTagPrefix?: string;
   useTags?: boolean;
-  edition?: string; // Ajout pour les versions "édition"
-  livingStandard?: boolean; // Ajout pour les normes vivantes (ex: HTML)
+  edition?: string; 
+  livingStandard?: boolean;
+  standardSupport?: boolean;
 }
 
 export const SYNC_LANGAGES: LangageSyncConfig[] =  [
@@ -18,18 +19,24 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
     sourceUrl: 'html',
     livingStandard: true
   },
-  {
+ /* {
     nameInDb: 'CSS',
     sourceType: 'custom',
     sourceUrl: 'css',
     livingStandard: true
-  },{
-  nameInDb: 'JavaScript',
-  sourceType: 'custom',
-  sourceUrl: 'https://tc39.es/ecma262/',
-  edition: undefined
-}
-,
+  },*/
+  {
+    nameInDb: 'JavaScript',
+    sourceType: 'github',
+    sourceUrl: 'tc39/ecma262',
+    useTags: true
+  },
+  {
+    nameInDb: 'ECMAScript',
+    sourceType: 'github',
+    sourceUrl: 'tc39/ecma262',
+    useTags: true
+  },
   {
   nameInDb: 'Angular',
   sourceType: 'npm',
@@ -216,10 +223,17 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   },
   {
   nameInDb: 'Ruby',
-  sourceType: 'github',
+  sourceType: 'custom',
   sourceUrl: 'ruby/ruby',
   ltsSupport: false,
   },
+  {
+  nameInDb: 'C',
+  sourceType: 'custom',
+  sourceUrl: 'c',
+  standardSupport: true
+}
+, 
   {
   nameInDb: 'C#',
   sourceType: 'github',
@@ -231,6 +245,8 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   sourceType: 'github',
   sourceUrl: 'cplusplus/draft',
   ltsSupport: false,
+  useTags: true,
+  standardSupport: true,
   },
   {
   nameInDb: 'Scala',
@@ -322,7 +338,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   nameInDb: 'Unity',
   sourceType: 'custom',
   sourceUrl: 'unity',
-  ltsSupport: false,
+  ltsSupport: true,
   },
   {
   nameInDb: 'Express.js',
@@ -377,7 +393,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] =  [
   ltsSupport: false,
   },
   {
-  nameInDb: 'Web Assembly',
+  nameInDb: 'WebAssembly',
   sourceType: 'github',
   sourceUrl: 'WebAssembly/spec',
   ltsSupport: false,
