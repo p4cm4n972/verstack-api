@@ -8,6 +8,27 @@ import { SYNC_LANGAGES, LangageSyncConfig } from './langage-sync.config';
 import * as semver from 'semver';
 
 @Injectable()
+/**
+ * Service permettant de synchroniser et de mettre à jour les versions des différents langages de programmation
+ * dans la base de données à partir de diverses sources (npm, GitHub, pages custom, etc.).
+ *
+ * Ce service gère la récupération des dernières versions, LTS, éditions ou standards des langages référencés,
+ * en normalisant les labels selon le langage, et en mettant à jour les entrées correspondantes en base.
+ *
+ * Principales fonctionnalités :
+ * - Synchronisation de tous les langages configurés via `syncAll()`
+ * - Mise à jour depuis npm (`updateFromNpm`)
+ * - Mise à jour depuis les tags GitHub (`updateFromGitHubTag`)
+ * - Mise à jour depuis les releases GitHub (`updateFromGitHubRelease`)
+ * - Mise à jour personnalisée pour certains langages via scraping ou API tierces (`updateCustom`)
+ *
+ * Utilise Mongoose pour la persistance, HttpService pour les requêtes externes, et gère la journalisation des opérations.
+ *
+ * @remarks
+ * - Les méthodes privées gèrent la normalisation des labels et la construction des headers GitHub.
+ * - Les méthodes publiques sont asynchrones et journalisent les succès/échecs.
+ * - Le service est conçu pour être utilisé dans un contexte NestJS.
+ */
 export class LangageUpdateService {
   private readonly logger = new Logger(LangageUpdateService.name);
 

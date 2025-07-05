@@ -12,7 +12,6 @@ async function bootstrap() {
   await syncService.syncAll();
 
   await app.close();
-  process.exit(0);
 }
 
 bootstrap().catch((err) => {
