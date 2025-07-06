@@ -7,6 +7,7 @@ import { Langage } from '../langages/entities/langage.entity';
 import { SYNC_LANGAGES, LangageSyncConfig } from './langage-sync.config';
 import * as semver from 'semver';
 
+import { CUSTOM_UPDATERS, CustomUpdaterDeps } from "./custom-updaters";
 @Injectable()
 /**
  * Service permettant de synchroniser et de mettre à jour les versions des différents langages de programmation
@@ -274,160 +275,21 @@ export class LangageUpdateService {
     }
   }
 
+
   async updateCustom(config: LangageSyncConfig) {
     try {
-      if (config.nameInDb === 'Ruby') {
-        try {
-          const res = await firstValueFrom(
-            this.http.get('https://www.ruby-lang.org/en/downloads/', {
-              responseType: 'text' as any,
-            })
-          );
-
-          const match = res.data.match(/Stable releases:[^]*?Ruby\s+(\d+\.\d+\.\d+)/i);
-          if (match?.[1]) {
-            const version = match[1];
-            await this.setVersion('Ruby', 'current', version);
-            this.logger.log(`✅ Ruby (custom): current=${version}`);
-          } else {
-            this.logger.warn(`⚠️ Ruby (custom): impossible de détecter la version`);
-          }
-        } catch (error) {
-          this.logger.error(`❌ Erreur updateCustom [Ruby]:`, error);
-        }
+      const deps: CustomUpdaterDeps = {
+        http: this.http,
+        setVersion: this.setVersion.bind(this),
+        logger: this.logger,
+        normalizeLabel: this.normalizeLabel.bind(this)
+      };
+      const updater = CUSTOM_UPDATERS[config.nameInDb] || CUSTOM_UPDATERS[config.sourceUrl];
+      if (updater) {
+        await updater(config, deps);
         return;
       }
 
-      if (config.nameInDb === 'C') {
-        const res = await firstValueFrom(this.http.get(
-          'https://en.wikipedia.org/wiki/C_(programming_language)',
-          { responseType: 'text' as any }
-        ));
-        const wiki = res.data;
-
-        const found: Array<{ version: string; date?: string }> = [];
-        ['C23', 'C17', 'C11', 'C99'].forEach(ver => {
-          const regex = new RegExp(`${ver}.*?(?:ISO\\/IEC \\d+:\\d{4})`, 'i');
-          if (regex.test(wiki)) found.push({ version: ver });
-        });
-
-        if (found.length) {
-          for (const std of found) {
-            await this.setVersion('C', 'standard', std.version);
-          }
-          // Définir 'current' sur le premier standard détecté (le plus récent)
-          const current = found[0].version;
-          await this.setVersion('C', 'current', current);
-          this.logger.log(`📘 C (custom): standards=${found.map(f => f.version).join(', ')}, current=${current}`);
-        } else {
-          this.logger.warn('⚠️ C (custom): aucun standard détecté');
-        }
-        return;
-      }
-
-      if (config.nameInDb === 'MATLAB') {
-        const res = await firstValueFrom(this.http.get(
-          'https://www.mathworks.com/products/new_products/latest_features.html',
-          { responseType: 'text' as any }
-        ));
-
-        const match = res.data.match(/R(\d{4}[ab])/i); // ex: R2025a
-        if (match?.[1]) {
-          const raw = match[1]; // exemple : "2025a"
-          const numeric = raw.slice(0, 4) + (raw.endsWith('a') ? '.1' : '.2');
-          await this.setVersion('MATLAB', 'current', numeric);
-          this.logger.log(`✅ MATLAB (custom): current=${numeric}`);
-        } else {
-          this.logger.warn(`⚠️ MATLAB (custom): impossible de détecter la version`);
-        }
-      }
-
-      if (config.nameInDb === 'R') {
-        try {
-          const res = await firstValueFrom(
-            this.http.get('https://api.r-hub.io/rversions/r-release')
-          );
-          const latest = res.data?.version;
-          const date = res.data?.date;
-          if (latest) {
-            await this.setVersion('R', 'current', latest, date);
-            this.logger.log(`✅ R (custom via r-hub): current=${latest}`);
-          } else {
-            this.logger.warn(`⚠️ R (custom): version introuvable`);
-          }
-        } catch (err) {
-          this.logger.error(`❌ Erreur updateCustom [R]:`, err);
-        }
-        return;
-      }
-
-
-      if (config.nameInDb === 'Unity') {
-        try {
-          const res = await firstValueFrom(
-            this.http.get('https://public-cdn.cloud.unity3d.com/hub/prod/releases-linux.json')
-          );
-          const data = res.data;
-
-          const official = data.official;
-          const ltsList = data.lts;
-
-          const latest = official?.[0]?.version;
-          const lts = ltsList?.[0]?.version;
-
-          if (latest) {
-            await this.setVersion('Unity', 'current', latest);
-            this.logger.log(`✅ Unity (custom): current=${latest}`);
-          }
-
-          if (lts) {
-            await this.setVersion('Unity', 'lts', lts);
-            this.logger.log(`✅ Unity (custom): lts=${lts}`);
-          }
-
-        } catch (err) {
-          this.logger.error('❌ Erreur updateCustom [Unity]', err);
-        }
-        return;
-      }
-
-
-
-
-
-
-
-
-
-
-      if (config.sourceUrl === 'nodejs') {
-        const res = await firstValueFrom(this.http.get('https://nodejs.org/dist/index.json'));
-        const all = res.data;
-
-        const lts = all.filter((r: any) => r.lts)
-          .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
-
-        const current = all.filter((r: any) => !r.lts)
-          .sort((a, b) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
-
-        if (current) await this.setVersion(config.nameInDb, 'current', current.version.replace(/^v/, ''), current.date);
-        if (lts) await this.setVersion(config.nameInDb, 'lts', lts.version.replace(/^v/, ''), lts.date);
-
-        this.logger.log(`✅ Node.js: current=${current?.version}, lts=${lts?.version}`);
-      }
-
-      if (config.sourceUrl.includes('go.dev')) {
-        const res = await firstValueFrom(this.http.get(config.sourceUrl));
-        const stable = res.data.find((v: any) => v.stable);
-
-        if (stable?.version) {
-          const latest = stable.version.replace(/^go/, '');
-          await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
-          this.logger.log(`✅ Go (custom): current=${latest}`);
-        } else {
-          this.logger.warn(`⚠️ Aucune version stable trouvée pour Go`);
-        }
-      }
       if (config.livingStandard) {
         await this.setVersion(config.nameInDb, 'livingStandard', 'Living Standard');
         this.logger.log(`✅ ${config.nameInDb} (custom): livingStandard`);
@@ -438,76 +300,10 @@ export class LangageUpdateService {
         this.logger.log(`✅ ${config.nameInDb} (custom): edition=${config.edition}`);
       }
 
-      if (config.nameInDb === 'Java') {
-        const info = await firstValueFrom(this.http.get('https://api.adoptium.net/v3/info/available_releases'));
-        const available = info.data.available_releases as number[];
-        const ltsReleases = new Set(info.data.lts_releases as number[]);
-        const currentVersion = Math.max(...available);
-
-        const res = await firstValueFrom(this.http.get(
-          `https://api.adoptium.net/v3/assets/feature_releases/${currentVersion}/ga?jvm_impl=hotspot&image_type=jdk&os=linux&page=0&page_size=1&sort_order=DESC`
-        ));
-
-        const entry = res.data[0];
-        const semver = entry?.version_data?.semver ?? null;
-        const releaseDate = entry?.release_date ?? null;
-
-        if (semver) {
-          const cleanVersion = semver.split('+')[0]; // remove build metadata
-          await this.setVersion(config.nameInDb, 'current', cleanVersion, releaseDate);
-
-          if (ltsReleases.has(currentVersion)) {
-            await this.setVersion(config.nameInDb, 'lts', cleanVersion, releaseDate);
-          }
-
-          this.logger.log(`✅ Java (custom): current=${cleanVersion}${ltsReleases.has(currentVersion) ? `, lts=${cleanVersion}` : ''}`);
-        } else {
-          this.logger.warn(`⚠️ Java (custom): aucune version trouvée`);
-        }
-      }
-
-      if (config.sourceUrl.includes('dart-archive')) {
-        const res = await firstValueFrom(this.http.get(config.sourceUrl));
-        const version = res.data?.version;
-
-        if (version) {
-          await this.setVersion(config.nameInDb, 'current', version);
-          this.logger.log(`✅ Dart (custom): current=${version}`);
-        } else {
-          this.logger.warn(`⚠️ Impossible de récupérer la version de Dart`);
-        }
-
-        return;
-      }
-
-      if (config.nameInDb === 'MongoDB') {
-        const res = await firstValueFrom(this.http.get(config.sourceUrl, { responseType: 'text' as any }));
-        const match = res.data.match(/(\d+\.\d+\.\d+)\s+\(current\)/i);
-        if (match && match[1]) {
-          const version = match[1];
-          await this.setVersion(config.nameInDb, 'current', version);
-          this.logger.log(`✅ MongoDB (custom): current=${version}`);
-        } else {
-          this.logger.warn(`⚠️ MongoDB (custom): impossible de trouver la version sur la page`);
-        }
-        return;
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
     } catch (error) {
       this.logger.error(`❌ Erreur updateCustom [${config.nameInDb}]:`, error);
       throw error;
     }
   }
+
 }
