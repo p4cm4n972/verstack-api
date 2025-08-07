@@ -65,6 +65,8 @@ export class LangageUpdateService {
   }
 
   private githubHeaders(): Record<string, string> {
+    console.log(process.env.GITHUB_TOKEN);
+
     return {
       'User-Agent': 'verstack-bot',
       ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {})

@@ -7,10 +7,10 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto/paginatio
 
 @Injectable()
 export class UsersService {
-constructor(
+    constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
-    
-) {}
+
+    ) { }
 
     create(createUserDto: CreateUserDto) {
         const user = new this.userModel(createUserDto);
@@ -36,7 +36,7 @@ constructor(
 
     remove(id: number) {
         return this.userModel.deleteOne({ _id: id }).
-        exec();
+            exec();
     }
 
 }

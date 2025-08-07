@@ -25,18 +25,18 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
     AdminModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath : ['.env' , '/home/ubuntu/.env'],
+      envFilePath: ['.env', '/home/ubuntu/.env'],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) =>
         configService.get<string>('MONGO_URI')
           ? {
-              uri: configService.get<string>('MONGO_URI'),
-            }
+            uri: configService.get<string>('MONGO_URI'),
+          }
           : {
-              uri: 'mongodb://localhost/nest',
-            },
+            uri: 'mongodb://localhost/nest',
+          },
     }
     ),
     MailerModule.forRootAsync({
@@ -55,17 +55,17 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
         defaults: {
           from: config.get('MAIL_FROM'),
         },
-  template: {
-    dir: __dirname + '/templates', // dossier des templates si tu veux
-    adapter: new HandlebarsAdapter(),
-    options: {
-      strict: true,
-    },
-      },
-    }),
-  })
+        template: {
+          dir: __dirname + '/templates', // dossier des templates si tu veux
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+    })
   ],
   controllers: [AppController, MailerTestController],
   providers: [AppService, MailerTestService, CustomLoggerService],
 })
-export class AppModule {}
+export class AppModule { }
