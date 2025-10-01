@@ -21,7 +21,6 @@
     "sync:langages": "ts-node src/scripts/sync-langages.ts"
   },
   "dependencies": {
-    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -40,8 +39,8 @@
     "nodemailer": "^6.10.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "semver": "^7.5.4",
     "winston": "^3.17.0"
-    ,"semver": "^7.5.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
