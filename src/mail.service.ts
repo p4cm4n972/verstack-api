@@ -9,7 +9,7 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: this.configService.get('MAIL_HOST'),
       port: this.configService.get<number>('MAIL_PORT'),
       secure: false,

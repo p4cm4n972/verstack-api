@@ -8,6 +8,7 @@ import {
   EventSchema,
 } from '../events/entities/event.entity/event.entity';
 import { LangageUpdateService } from './langage-update.service';
+import { LangageUpdateOptimizedService } from './langage-update-optimized.service';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -25,6 +26,10 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule
   ],
   controllers: [LangagesController],
-  providers: [{ provide: LangagesService, useClass: LangagesService }, { provide: LangageUpdateService, useClass: LangageUpdateService }],
+  providers: [
+    { provide: LangagesService, useClass: LangagesService },
+    { provide: LangageUpdateService, useClass: LangageUpdateService },
+    { provide: LangageUpdateOptimizedService, useClass: LangageUpdateOptimizedService }
+  ],
 })
 export class LangagesModule {}
