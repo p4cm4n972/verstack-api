@@ -28,25 +28,95 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       logger.error('❌ Erreur updateCustom [Ruby]:', error);
     }
   },
-  C: async (_config, { http, setVersion, logger }) => {
-    const res = await firstValueFrom(
-      http.get('https://en.wikipedia.org/wiki/C_(programming_language)', { responseType: 'text' as any })
-    );
-    const wiki = res.data as string;
-    const found: Array<{ version: string }> = [];
-    ['C23', 'C17', 'C11', 'C99'].forEach(ver => {
-      const regex = new RegExp(`${ver}.*?(?:ISO/IEC \\d+:\\d{4})`, 'i');
-      if (regex.test(wiki)) found.push({ version: ver });
-    });
-    if (found.length) {
-      for (const std of found) {
-        await setVersion('C', 'standard', std.version);
+  C: async (_config, { http, setVersion, logger, normalizeLabel }) => {
+    try {
+      // Use the Wikipedia API instead of scraping the HTML page directly.
+      // The API returns JSON and is more stable; include a User-Agent in headers.
+      const apiUrl = 'https://en.wikipedia.org/w/api.php?action=parse&page=C_(programming_language)&prop=text&format=json';
+      const res = await firstValueFrom(http.get(apiUrl, { headers: { 'User-Agent': 'verstack-bot' }, responseType: 'json' as any }));
+      const html = res.data?.parse?.text?.['*'] as string | undefined;
+      if (!html) {
+        logger.warn('⚠️ C (custom): contenu Wikipedia introuvable via API');
+        return;
       }
-      const current = found[0].version;
-      await setVersion('C', 'current', current);
-      logger.log(`📘 C (custom): standards=${found.map(f => f.version).join(', ')}, current=${current}`);
-    } else {
-      logger.warn('⚠️ C (custom): aucun standard détecté');
+
+      const { extractCStandardsFromHtml } = await import('./version-parsers');
+      const found = extractCStandardsFromHtml(html);
+
+      if (found.length) {
+        for (const std of found) {
+          await setVersion('C', 'standard', std);
+        }
+        const current = found[0];
+        await setVersion('C', 'current', current);
+        logger.log(`📘 C (custom): standards=${found.join(', ')}, current=${current}`);
+      } else {
+        logger.warn('⚠️ C (custom): aucun standard détecté dans le contenu Wikipedia (API)');
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [C]:', err);
+    }
+  },
+  // Placeholder updaters for sources that have no reliable API implemented yet.
+  Delphi: async (_config, { http, setVersion, logger }) => {
+    try {
+      const apiUrls = [
+        'https://en.wikipedia.org/w/api.php?action=parse&page=Delphi_(software)&prop=text&format=json',
+        'https://en.wikipedia.org/w/api.php?action=parse&page=Delphi&prop=text&format=json'
+      ];
+      let foundVersions: string[] = [];
+      for (const apiUrl of apiUrls) {
+        try {
+          const res = await firstValueFrom(http.get(apiUrl, { headers: { 'User-Agent': 'verstack-bot' }, responseType: 'json' as any }));
+          const html = res.data?.parse?.text?.['*'] as string | undefined;
+          if (!html) continue;
+          const matches = Array.from(html.matchAll(/Delphi\s*(?:version|\s)?\s*(\d+(?:\.\d+){0,2})/gi)).map(m => m[1]);
+          if (matches.length) foundVersions.push(...matches);
+        } catch (err) {
+          // ignore and try next
+        }
+      }
+      if (foundVersions.length) {
+        // choose the highest coerced semver-like value
+        const coerced = foundVersions.map(v => semver.coerce(v)?.version).filter((v): v is string => Boolean(v));
+        const latest = coerced.sort(semver.rcompare)[0] || foundVersions[0];
+        await setVersion('Delphi', 'current', latest);
+        logger.log(`✅ Delphi (custom): current=${latest}`);
+      } else {
+        logger.warn('⚠️ Delphi (custom): aucune version détectée via Wikipedia API');
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Delphi]:', err);
+    }
+  },
+  json: async (_config, { setVersion, logger }) => {
+    try {
+      await setVersion('JSON', 'livingStandard', 'ECMA-404 / RFC 8259');
+      logger.log('✅ JSON (custom): livingStandard=ECMA-404 / RFC 8259');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [JSON]:', err);
+    }
+  },
+  sql: async (_config, { http, setVersion, logger }) => {
+    try {
+      const apiUrl = 'https://en.wikipedia.org/w/api.php?action=parse&page=SQL&prop=text&format=json';
+      const res = await firstValueFrom(http.get(apiUrl, { headers: { 'User-Agent': 'verstack-bot' }, responseType: 'json' as any }));
+      const html = res.data?.parse?.text?.['*'] as string | undefined;
+      if (!html) {
+        logger.warn('⚠️ SQL (custom): contenu Wikipedia introuvable');
+        return;
+      }
+      const match = html.match(/SQL\s*[:\-–]?\s*(?:ISO\s*)?([0-9]{4})/i) || html.match(/SQL\s*:\s*(\d{4})/i);
+      if (match && match[1]) {
+        const label = `SQL:${match[1]}`;
+        await setVersion('SQL', 'standard', label);
+        await setVersion('SQL', 'current', label);
+        logger.log(`✅ SQL (custom): standard=${label}`);
+      } else {
+        logger.warn('⚠️ SQL (custom): aucun standard détecté');
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [SQL]:', err);
     }
   },
   MATLAB: async (_config, { http, setVersion, logger }) => {
@@ -103,13 +173,15 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     const all = res.data;
     const lts = all
       .filter((r: any) => r.lts)
-      .sort((a: any, b: any) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
+      .sort((a: any, b: any) => semver.rcompare(a.version.replace(/^v/, ''), b.version.replace(/^v/, '')))[0];
     const current = all
       .filter((r: any) => !r.lts)
-      .sort((a: any, b: any) => semver.rcompare(a.version.replace('v', ''), b.version.replace('v', '')))[0];
-    if (current) await setVersion(config.nameInDb, 'current', current.version.replace(/^v/, ''), current.date);
-    if (lts) await setVersion(config.nameInDb, 'lts', lts.version.replace(/^v/, ''), lts.date);
-    logger.log(`✅ Node.js: current=${current?.version}, lts=${lts?.version}`);
+      .sort((a: any, b: any) => semver.rcompare(a.version.replace(/^v/, ''), b.version.replace(/^v/, '')))[0];
+    const currentLabel = current ? current.version.replace(/^v/, '') : null;
+    const ltsLabel = lts ? lts.version.replace(/^v/, '') : null;
+    if (current) await setVersion(config.nameInDb, 'current', currentLabel!, current.date);
+    if (lts) await setVersion(config.nameInDb, 'lts', ltsLabel!, lts.date);
+    logger.log(`✅ Node.js: current=${currentLabel}, lts=${ltsLabel}`);
   },
   nodejs: async (config, deps) => CUSTOM_UPDATERS["Node.js"](config, deps),
   Go: async (config, { http, setVersion, logger, normalizeLabel }) => {

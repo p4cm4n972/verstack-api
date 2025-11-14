@@ -38,6 +38,10 @@ async function main() {
   try {
     // Synchronisation optimisée
     const startTime = Date.now();
+    // Support --dry-run for the CLI
+    const dryRun = process.argv.includes('--dry-run');
+    if (dryRun) process.env.DRY_RUN = '1';
+
     const result = await service.syncAll({
       concurrency: parseInt(process.env.SYNC_CONCURRENCY || '10'),
       timeout: parseInt(process.env.SYNC_TIMEOUT || '30000')

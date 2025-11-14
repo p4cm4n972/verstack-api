@@ -8,6 +8,10 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
+  // Support --dry-run to avoid DB writes
+  const dryRun = process.argv.includes('--dry-run');
+  if (dryRun) process.env.DRY_RUN = '1';
+
   const syncService = app.get(LangageUpdateService);
   await syncService.syncAll();
 

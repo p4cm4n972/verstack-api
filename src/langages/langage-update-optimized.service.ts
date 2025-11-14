@@ -10,6 +10,7 @@ import { RetryHelper, RetryOptions } from './retry.helper';
 import { CacheHelper } from './cache.helper';
 import { ParallelHelper, ParallelOptions } from './parallel.helper.fixed';
 import * as semver from 'semver';
+import { extractLatestFromTags, extractCppDraft, extractFallbackVersionFromTags } from './version-parsers';
 
 @Injectable()
 export class LangageUpdateOptimizedService {
@@ -60,6 +61,10 @@ export class LangageUpdateOptimizedService {
   }
 
   private async setVersion(name: string, type: string, label: string, releaseDate?: string) {
+    if (process.env.DRY_RUN === '1') {
+      this.logger.log(`(dry-run) ➜ setVersion ${name} ${type}=${label} ${releaseDate ?? ''}`);
+      return;
+    }
     const langage = await this.langageModel.findOne({ name });
 
     if (!langage) {
@@ -97,6 +102,9 @@ export class LangageUpdateOptimizedService {
 
   private async makeHttpRequest(url: string, options: any = {}): Promise<any> {
     const cacheKey = `http:${url}:${JSON.stringify(options)}`;
+
+    // Ensure a default User-Agent is present for sites that require it
+    options = { ...(options || {}), headers: { 'User-Agent': 'verstack-bot', ...((options || {}).headers || {}) } };
 
     return CacheHelper.getOrFetch(
       cacheKey,
@@ -250,20 +258,24 @@ export class LangageUpdateOptimizedService {
       return;
     }
 
-    // Traitement standard
-    const versionRegex = /\d+\.\d+/;
-    const versions = tags
-      .filter(t => versionRegex.test(t))
-      .map(t => semver.coerce(t)?.version)
-      .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
-      .sort(semver.rcompare);
-
-    const latest = versions[0];
+    // Traitement standard via helper
+    const latest = extractLatestFromTags(tags);
     if (latest) {
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    } else {
+      // fallback for non-semver tags (e.g., Flang release_1_0)
+      const fallback = extractFallbackVersionFromTags(tags);
+      if (fallback) {
+        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback));
+      }
     }
 
+    // Build versions list for LTS detection
     if (config.ltsSupport && config.ltsTagPrefix) {
+      const versions = tags
+        .map(t => semver.coerce(t)?.version)
+        .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
+        .sort(semver.rcompare);
       const lts = versions.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
       if (lts) {
         await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
@@ -271,7 +283,7 @@ export class LangageUpdateOptimizedService {
     }
 
     const ltsInfo = config.ltsSupport ? `, lts=${config.ltsTagPrefix ?? 'N/A'}` : '';
-    this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest}${ltsInfo}`);
+    this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest ?? 'N/A'}${ltsInfo}`);
   }
 
   async updateFromGitHubRelease(config: LangageSyncConfig) {

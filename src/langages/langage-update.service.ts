@@ -8,6 +8,7 @@ import { SYNC_LANGAGES, LangageSyncConfig } from './langage-sync.config';
 import * as semver from 'semver';
 
 import { CUSTOM_UPDATERS, CustomUpdaterDeps } from "./custom-updaters";
+import { extractLatestFromTags, extractCppDraft, extractFallbackVersionFromTags } from './version-parsers';
 @Injectable()
 /**
  * Service permettant de synchroniser et de mettre à jour les versions des différents langages de programmation
@@ -59,6 +60,27 @@ export class LangageUpdateService {
         return label.replace(/^OTP-/, '');
       case 'ocaml':
         return label.replace(/^ocaml-/, '');
+      case 'docker':
+        // GitHub releases for moby/moby sometimes use tags like "docker-v29.0.0".
+        // Remove the repository prefix and any leading 'v'.
+        return label.replace(/^docker[-_]?/i, '').replace(/^v(?=\d)/i, '').trim();
+      case 'laravel':
+      case 'bootstrap':
+      case 'kubernetes':
+      case 'ansible':
+      case 'kotlin':
+      case 'c#':
+      case 'scala':
+      case 'symfony':
+      case 'deno':
+      case 'lua':
+      case 'julia':
+      case 'elixir':
+      case 'fortran':
+      case 'spring':
+      case 'node.js':
+        // Remove leading 'v' prefix common in GitHub tags/releases (v1.2.3 -> 1.2.3)
+        return label.replace(/^v(?=\d)/i, '').trim();
       default:
         return label.trim();
     }
@@ -73,6 +95,16 @@ export class LangageUpdateService {
   }
 
   private async setVersion(name: string, type: string, label: string, releaseDate?: string) {
+    // sanitize label: remove common leading "v" prefix before persisting (e.g. v1.2.3 -> 1.2.3)
+    if (typeof label === 'string') {
+      label = label.replace(/^v(?=\d)/i, '').trim();
+    }
+
+    if (process.env.DRY_RUN === '1') {
+      this.logger.log(`(dry-run) ➜ setVersion ${name} ${type}=${label} ${releaseDate ?? ''}`);
+      return;
+    }
+
     const langage = await this.langageModel.findOne({ name });
 
     if (!langage) {
@@ -192,8 +224,7 @@ export class LangageUpdateService {
       if (res.data.length < 100) break;
     }
     if (config.nameInDb === 'C++' && config.standardSupport) {
-      const drafts = tags.filter(t => /^n\d{4}$/.test(t)).sort().reverse();
-      const latestDraft = drafts[0];
+      const latestDraft = extractCppDraft(tags);
 
       // Met à jour le draft comme version "standard"
       if (latestDraft) {
@@ -226,20 +257,22 @@ export class LangageUpdateService {
       return; // Évite le traitement standard
     }
 
-    // Traitement standard
-    const versionRegex = /\d+\.\d+/;
-    const versions = tags
-      .filter(t => versionRegex.test(t))
-      .map(t => semver.coerce(t)?.version)
-      .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
-      .sort(semver.rcompare);
-
-    const latest = versions[0];
+    // Traitement standard via helper
+    const latest = extractLatestFromTags(tags);
     if (latest) {
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    } else {
+      const fallback = extractFallbackVersionFromTags(tags);
+      if (fallback) {
+        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback));
+      }
     }
 
     if (config.ltsSupport && config.ltsTagPrefix) {
+      const versions = tags
+        .map(t => semver.coerce(t)?.version)
+        .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
+        .sort(semver.rcompare);
       const lts = versions.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
       if (lts) {
         await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
@@ -247,7 +280,7 @@ export class LangageUpdateService {
     }
 
     const ltsInfo = config.ltsSupport ? `, lts=${config.ltsTagPrefix ?? 'N/A'}` : '';
-    this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest}${ltsInfo}`);
+    this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest ?? 'N/A'}${ltsInfo}`);
   }
 
 
