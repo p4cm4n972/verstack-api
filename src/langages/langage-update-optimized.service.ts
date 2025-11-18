@@ -29,28 +29,42 @@ export class LangageUpdateOptimizedService {
 
   private normalizeLabel(name: string, label: string): string {
     if (!label) return '';
+
+    let normalized = label;
+
+    // Cas spécifiques d'abord
     switch (name.toLowerCase()) {
       case 'php': {
         const match = label.match(/(\d+\.\d+\.\d+)/);
-        return match ? match[1] : label.replace(/^php-/, '');
+        return match ? match[1] : label.replace(/^php-/, '').replace(/^v/, '');
       }
       case 'swift': {
         const match = label.match(/(\d+\.\d+\.\d+)/);
-        return match ? match[1] : label.replace(/^swift-/, '').replace(/-RELEASE$/, '');
+        return match ? match[1] : label.replace(/^swift-/, '').replace(/-RELEASE$/, '').replace(/^v/, '');
       }
       case 'ruby':
-        return label.replace(/_/g, '.');
+        return label.replace(/_/g, '.').replace(/^v/, '');
       case 'c++':
-        return label.startsWith('n') ? 'C++23' : label;
+        return label.startsWith('n') ? 'C++23' : label.replace(/^v/, '');
       case 'bun':
-        return label.replace(/^bun-v/, '');
+        return label.replace(/^bun-v/, '').replace(/^v/, '');
       case 'erlang':
-        return label.replace(/^OTP-/, '');
+        return label.replace(/^OTP-/, '').replace(/^v/, '');
       case 'ocaml':
-        return label.replace(/^ocaml-/, '');
-      default:
-        return label.trim();
+        return label.replace(/^ocaml-/, '').replace(/^v/, '');
+      case 'docker':
+        return label.replace(/^docker-v?/, '').replace(/^v/, '');
+      case 'v':
+        // V (Vlang) utilise des weekly releases : weekly.2025.46 → 2025.46
+        return label.replace(/^weekly\./, '');
     }
+
+    // Règle générique : retirer le préfixe "v" si présent
+    if (/^v\d/.test(normalized)) {
+      normalized = normalized.substring(1);
+    }
+
+    return normalized.trim();
   }
 
   private githubHeaders(): Record<string, string> {
@@ -205,6 +219,34 @@ export class LangageUpdateOptimizedService {
     this.logger.log(`✅ ${config.nameInDb} (npm): latest=${latest}${ltsInfo}`);
   }
 
+  private filterTagsForLanguage(tags: string[], languageName: string): string[] {
+    switch (languageName) {
+      case 'Perl':
+        // Ne garder que les tags v5.x.x (ignorer les vieux release-* tags)
+        return tags.filter(t => /^v5\.\d+\.\d+/.test(t));
+
+      case 'Haskell':
+        // Ne garder que les tags ghc-X.Y.Z
+        return tags.filter(t => /^ghc-\d+\.\d+\.\d+/.test(t));
+
+      case 'Django':
+        // Filtrer les tags Django: garder seulement X.Y ou X.Y.Z avec X < 100
+        return tags.filter(t => {
+          const match = t.match(/^(\d+)\.(\d+)/);
+          if (!match) return false;
+          const major = parseInt(match[1], 10);
+          return major >= 1 && major < 100;
+        });
+
+      case 'C++':
+        // Exclure les tags qui commencent par 'n' (drafts) du parsing général
+        return tags.filter(t => !/^n\d{4}$/.test(t));
+
+      default:
+        return tags;
+    }
+  }
+
   async updateFromGitHubTag(config: LangageSyncConfig) {
     const tags: string[] = [];
 
@@ -226,6 +268,9 @@ export class LangageUpdateOptimizedService {
       if (resData?.length < 100) break;
     }
 
+    // Filtrer les tags selon le langage (avant tout traitement)
+    const filteredTags = this.filterTagsForLanguage(tags, config.nameInDb);
+
     // Logique spécifique pour C++
     if (config.nameInDb === 'C++' && config.standardSupport) {
       const drafts = tags.filter(t => /^n\d{4}$/.test(t)).sort().reverse();
@@ -243,7 +288,7 @@ export class LangageUpdateOptimizedService {
 
     // Logique spécifique pour JavaScript/ECMAScript
     if (['JavaScript', 'ECMAScript'].includes(config.nameInDb)) {
-      const editions = tags
+      const editions = filteredTags
         .filter(t => /^es\d{4}$/i.test(t))
         .map(t => t.toUpperCase())
         .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
@@ -259,12 +304,12 @@ export class LangageUpdateOptimizedService {
     }
 
     // Traitement standard via helper
-    const latest = extractLatestFromTags(tags);
+    const latest = extractLatestFromTags(filteredTags);
     if (latest) {
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
     } else {
       // fallback for non-semver tags (e.g., Flang release_1_0)
-      const fallback = extractFallbackVersionFromTags(tags);
+      const fallback = extractFallbackVersionFromTags(filteredTags);
       if (fallback) {
         await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback));
       }
@@ -272,7 +317,7 @@ export class LangageUpdateOptimizedService {
 
     // Build versions list for LTS detection
     if (config.ltsSupport && config.ltsTagPrefix) {
-      const versions = tags
+      const versions = filteredTags
         .map(t => semver.coerce(t)?.version)
         .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
         .sort(semver.rcompare);

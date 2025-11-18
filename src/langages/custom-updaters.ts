@@ -44,12 +44,11 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       const found = extractCStandardsFromHtml(html);
 
       if (found.length) {
-        for (const std of found) {
-          await setVersion('C', 'standard', std);
-        }
-        const current = found[0];
-        await setVersion('C', 'current', current);
-        logger.log(`📘 C (custom): standards=${found.join(', ')}, current=${current}`);
+        // Garder uniquement le standard le plus récent (le premier dans le tableau)
+        const latestStandard = found[0];
+        await setVersion('C', 'standard', latestStandard);
+        await setVersion('C', 'current', latestStandard);
+        logger.log(`📘 C (custom): standard=${latestStandard}, current=${latestStandard}`);
       } else {
         logger.warn('⚠️ C (custom): aucun standard détecté dans le contenu Wikipedia (API)');
       }
@@ -77,8 +76,13 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         }
       }
       if (foundVersions.length) {
-        // choose the highest coerced semver-like value
-        const coerced = foundVersions.map(v => semver.coerce(v)?.version).filter((v): v is string => Boolean(v));
+        // Filtrer les versions avec un numéro majeur raisonnable (< 100)
+        // Delphi utilise: 10.4, 11, 12 (pas 2010, 2005 qui sont des années)
+        const coerced = foundVersions
+          .map(v => semver.coerce(v))
+          .filter((v): v is import('semver').SemVer => Boolean(v) && semver.major(v) < 100)
+          .map(v => v.version);
+
         const latest = coerced.sort(semver.rcompare)[0] || foundVersions[0];
         await setVersion('Delphi', 'current', latest);
         logger.log(`✅ Delphi (custom): current=${latest}`);
@@ -152,17 +156,34 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     try {
       const res = await firstValueFrom(http.get('https://public-cdn.cloud.unity3d.com/hub/prod/releases-linux.json'));
       const data = res.data;
-      const official = data.official;
-      const ltsList = data.lts;
-      const latest = official?.[0]?.version;
-      const lts = ltsList?.[0]?.version;
+      const official = data.official || [];
+
+      // Unity uses Year.Stream.Patch or just Major.Minor.Patch (Unity 6+)
+      // Find the version with the highest major number (year or version number)
+      const parseUnityVersion = (v: string) => {
+        const match = v.match(/^(\d+)\.(\d+)\.(\d+)/);
+        if (!match) return 0;
+        const major = parseInt(match[1], 10);
+        const minor = parseInt(match[2], 10);
+        const patch = parseInt(match[3], 10);
+        return major * 1000000 + minor * 1000 + patch;
+      };
+
+      // Sort by version number descending
+      const sortedVersions = official
+        .map((r: any) => ({ version: r.version, lts: r.lts }))
+        .sort((a: any, b: any) => parseUnityVersion(b.version) - parseUnityVersion(a.version));
+
+      const latest = sortedVersions[0]?.version;
+      const ltsVersion = sortedVersions.find((r: any) => r.lts)?.version;
+
       if (latest) {
         await setVersion('Unity', 'current', latest);
         logger.log(`✅ Unity (custom): current=${latest}`);
       }
-      if (lts) {
-        await setVersion('Unity', 'lts', lts);
-        logger.log(`✅ Unity (custom): lts=${lts}`);
+      if (ltsVersion) {
+        await setVersion('Unity', 'lts', ltsVersion);
+        logger.log(`✅ Unity (custom): lts=${ltsVersion}`);
       }
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Unity]', err);

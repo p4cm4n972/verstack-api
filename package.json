@@ -18,7 +18,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "sync:langages": "ts-node src/scripts/sync-langages.ts"
+    "sync:langages": "ts-node src/scripts/sync-langages.ts",
+    "check:versions": "ts-node -r tsconfig-paths/register src/langages/check-versions.script.ts",
+    "test:fixes": "ts-node -r tsconfig-paths/register src/langages/test-fixes.script.ts",
+    "analyze:issues": "ts-node -r tsconfig-paths/register src/langages/analyze-issues.script.ts",
+    "clean:database": "ts-node -r tsconfig-paths/register src/langages/clean-database.script.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
