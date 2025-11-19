@@ -286,5 +286,43 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (error) {
       logger.error('❌ Erreur updateCustom [PostgreSQL]:', error);
     }
+  },
+  css: async (_config, { setVersion, logger }) => {
+    try {
+      await setVersion('CSS', 'livingStandard', 'Living Standard');
+      logger.log('✅ CSS (custom): livingStandard=Living Standard');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [CSS]:', err);
+    }
+  },
+  Nginx: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(
+        http.get('https://nginx.org/en/download.html', {
+          responseType: 'text' as any,
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+
+      // Find stable version: "Stable version" section with nginx-X.Y.Z
+      const stableMatch = res.data.match(/Stable version[\s\S]*?nginx-([\d.]+)/i);
+
+      if (stableMatch && stableMatch[1]) {
+        const version = stableMatch[1];
+        await setVersion('Nginx', 'current', version);
+        logger.log(`✅ Nginx (custom): current=${version}`);
+      } else {
+        // Fallback: find any nginx version
+        const fallbackMatch = res.data.match(/nginx-([\d.]+)\.tar\.gz/);
+        if (fallbackMatch && fallbackMatch[1]) {
+          await setVersion('Nginx', 'current', fallbackMatch[1]);
+          logger.log(`✅ Nginx (custom): current=${fallbackMatch[1]}`);
+        } else {
+          logger.warn(`⚠️ Nginx (custom): impossible de détecter la version`);
+        }
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [Nginx]:', error);
+    }
   }
 };
