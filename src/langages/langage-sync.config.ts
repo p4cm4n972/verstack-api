@@ -126,5 +126,30 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   npm('Prisma', 'prisma'),
   npm('tRPC', '@trpc/server'),
   // Web tools - Server
-  custom('Nginx', 'nginx')
+  custom('Nginx', 'nginx'),
+  // Mobile tools - Cross-Platform
+  npm('React Native', 'react-native'),
+  npm('Ionic', '@ionic/core'),
+  npm('Capacitor', '@capacitor/core'),
+  // Mobile tools - Native (SwiftUI/Jetpack tied to OS SDKs - no external sync)
+  // Mobile tools - Backend
+  npm('Firebase', 'firebase'),
+  github('SQLite', 'nickhutchinson/libsqlite3-sys'),
+  npm('Realm', 'realm'),
+  npm('Supabase', '@supabase/supabase-js'),
+  npm('AWS Amplify', 'aws-amplify'),
+  // Mobile tools - Build & Distribution
+  npm('Expo', 'expo'),
+  github('Fastlane', 'fastlane/fastlane'),
+  // Mobile tools - Frameworks
+  github('.NET MAUI', 'dotnet/maui'),
+  npm('NativeScript', 'nativescript'),
+  // Mobile tools - Flutter State Management (pub.dev - custom)
+  custom('Riverpod', 'riverpod'),
+  custom('BLoC', 'bloc'),
+  custom('GetX', 'get'),
+  // Mobile tools - Testing
+  npm('Detox', 'detox'),
+  npm('Appium', 'appium'),
+  github('Maestro', 'mobile-dev-inc/maestro')
 ];

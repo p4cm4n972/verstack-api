@@ -324,5 +324,60 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (error) {
       logger.error('❌ Erreur updateCustom [Nginx]:', error);
     }
+  },
+  // Flutter/Dart packages on pub.dev
+  riverpod: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(
+        http.get('https://pub.dev/api/packages/flutter_riverpod', {
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+      const version = res.data?.latest?.version;
+      if (version) {
+        await setVersion('Riverpod', 'current', version);
+        logger.log(`✅ Riverpod (pub.dev): current=${version}`);
+      } else {
+        logger.warn(`⚠️ Riverpod (pub.dev): impossible de détecter la version`);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [Riverpod]:', error);
+    }
+  },
+  bloc: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(
+        http.get('https://pub.dev/api/packages/flutter_bloc', {
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+      const version = res.data?.latest?.version;
+      if (version) {
+        await setVersion('BLoC', 'current', version);
+        logger.log(`✅ BLoC (pub.dev): current=${version}`);
+      } else {
+        logger.warn(`⚠️ BLoC (pub.dev): impossible de détecter la version`);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [BLoC]:', error);
+    }
+  },
+  get: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(
+        http.get('https://pub.dev/api/packages/get', {
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+      const version = res.data?.latest?.version;
+      if (version) {
+        await setVersion('GetX', 'current', version);
+        logger.log(`✅ GetX (pub.dev): current=${version}`);
+      } else {
+        logger.warn(`⚠️ GetX (pub.dev): impossible de détecter la version`);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [GetX]:', error);
+    }
   }
 };
