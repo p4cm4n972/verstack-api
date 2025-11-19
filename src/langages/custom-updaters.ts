@@ -260,5 +260,31 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } else {
       logger.warn(`⚠️ MongoDB (custom): impossible de trouver la version sur la page`);
     }
+  },
+  PostgreSQL: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Fetch from PostgreSQL versioning page
+      const res = await firstValueFrom(
+        http.get('https://www.postgresql.org/support/versioning/', {
+          responseType: 'text' as any,
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+
+      // Find the current version from the table
+      // Pattern: <td>17</td><td>17.7</td> - first pair is major version and current minor
+      const versionMatch = res.data.match(/<td>(\d+)<\/td>\s*<td>(\d+\.\d+)<\/td>/);
+
+      if (versionMatch && versionMatch[2]) {
+        // Use the full minor version (e.g., 17.7)
+        const version = versionMatch[2];
+        await setVersion('PostgreSQL', 'current', version);
+        logger.log(`✅ PostgreSQL (custom): current=${version}`);
+      } else {
+        logger.warn(`⚠️ PostgreSQL (custom): impossible de détecter la version`);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [PostgreSQL]:', error);
+    }
   }
 };

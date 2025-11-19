@@ -222,12 +222,18 @@ export class LangageUpdateOptimizedService {
   private filterTagsForLanguage(tags: string[], languageName: string): string[] {
     switch (languageName) {
       case 'Perl':
-        // Ne garder que les tags v5.x.x (ignorer les vieux release-* tags)
-        return tags.filter(t => /^v5\.\d+\.\d+/.test(t));
+        // Ne garder que les versions stables: v5.XX.Y où XX est pair (40, 42, etc.)
+        // Les versions impaires (41, 43, etc.) sont des versions de développement
+        return tags.filter(t => {
+          const match = t.match(/^v5\.(\d+)\.\d+$/);
+          if (!match) return false;
+          const minor = parseInt(match[1], 10);
+          return minor % 2 === 0; // Seulement les mineurs pairs
+        });
 
       case 'Haskell':
-        // Ne garder que les tags ghc-X.Y.Z
-        return tags.filter(t => /^ghc-\d+\.\d+\.\d+/.test(t));
+        // Ne garder que les tags ghc-X.Y.Z-release (versions stables)
+        return tags.filter(t => /^ghc-\d+\.\d+\.\d+-release$/.test(t));
 
       case 'Django':
         // Filtrer les tags Django: garder seulement X.Y ou X.Y.Z avec X < 100
