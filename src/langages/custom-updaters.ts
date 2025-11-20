@@ -400,5 +400,33 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (error) {
       logger.error('❌ Erreur updateCustom [SQLite]:', error);
     }
+  },
+  // Embedded protocols
+  mqtt: async (_config, { setVersion, logger }) => {
+    try {
+      // MQTT version is a specification version, currently 5.0
+      await setVersion('MQTT', 'current', '5.0');
+      logger.log('✅ MQTT (custom): current=5.0');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [MQTT]:', err);
+    }
+  },
+  coap: async (_config, { setVersion, logger }) => {
+    try {
+      // CoAP version is RFC 7252
+      await setVersion('CoAP', 'current', 'RFC 7252');
+      logger.log('✅ CoAP (custom): current=RFC 7252');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [CoAP]:', err);
+    }
+  },
+  modbus: async (_config, { setVersion, logger }) => {
+    try {
+      // Modbus version is specification based
+      await setVersion('Modbus', 'current', 'V1.1b3');
+      logger.log('✅ Modbus (custom): current=V1.1b3');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Modbus]:', err);
+    }
   }
 };

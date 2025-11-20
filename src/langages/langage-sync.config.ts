@@ -152,5 +152,26 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Mobile tools - Testing
   npm('Detox', 'detox'),
   npm('Appium', 'appium'),
-  github('Maestro', 'mobile-dev-inc/maestro')
+  github('Maestro', 'mobile-dev-inc/maestro'),
+  // Embedded - RTOS
+  github('FreeRTOS', 'FreeRTOS/FreeRTOS-Kernel'),
+  github('Zephyr', 'zephyrproject-rtos/zephyr'),
+  github('RT-Thread', 'RT-Thread/rt-thread'),
+  github('RIOT OS', 'RIOT-OS/RIOT'),
+  // Embedded - Frameworks/HAL
+  github('Arduino', 'arduino/Arduino'),
+  github('ESP-IDF', 'espressif/esp-idf'),
+  github('Mbed OS', 'ARMmbed/mbed-os'),
+  github('STM32Cube', 'STMicroelectronics/STM32CubeF4'),
+  github('Nordic SDK', 'nrfconnect/sdk-nrf'),
+  // Embedded - Build & Tools
+  npm('PlatformIO', 'platformio'),
+  github('OpenOCD', 'openocd-org/openocd'),
+  // Embedded - Protocols
+  custom('MQTT', 'mqtt'),
+  custom('CoAP', 'coap'),
+  custom('Modbus', 'modbus'),
+  // Embedded - Testing
+  github('Unity', 'ThrowTheSwitch/Unity'),
+  github('CppUTest', 'cpputest/cpputest')
 ];
