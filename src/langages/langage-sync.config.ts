@@ -173,5 +173,28 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   custom('Modbus', 'modbus'),
   // Embedded - Testing
   github('Unity', 'ThrowTheSwitch/Unity'),
-  github('CppUTest', 'cpputest/cpputest')
+  github('CppUTest', 'cpputest/cpputest'),
+  // Datascience - ML/DL Frameworks
+  npm('TensorFlow', 'tensorflow'),
+  npm('PyTorch', 'torch'),
+  npm('Scikit-learn', 'scikit-learn'),
+  npm('Keras', 'keras'),
+  npm('XGBoost', 'xgboost'),
+  github('LightGBM', 'microsoft/LightGBM'),
+  // Datascience - Data Processing
+  npm('Pandas', 'pandas'),
+  npm('NumPy', 'numpy'),
+  github('Apache Spark', 'apache/spark'),
+  github('Polars', 'pola-rs/polars'),
+  npm('Dask', 'dask'),
+  // Datascience - Visualization
+  npm('Matplotlib', 'matplotlib'),
+  npm('Plotly', 'plotly.js'),
+  npm('Seaborn', 'seaborn'),
+  // Datascience - Notebooks
+  npm('Jupyter', 'jupyter'),
+  // Datascience - MLOps
+  npm('MLflow', 'mlflow'),
+  github('Airflow', 'apache/airflow'),
+  npm('DVC', 'dvc')
 ];
