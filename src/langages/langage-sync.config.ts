@@ -123,6 +123,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('FastAPI', 'tiangolo/fastapi'),
   github('Ruby on Rails', 'rails/rails'),
   // Web tools - API & ORM
+  npm('GraphQL', 'graphql'),
   npm('Prisma', 'prisma'),
   npm('tRPC', '@trpc/server'),
   // Web tools - Server
