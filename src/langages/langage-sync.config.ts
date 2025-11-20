@@ -134,7 +134,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Mobile tools - Native (SwiftUI/Jetpack tied to OS SDKs - no external sync)
   // Mobile tools - Backend
   npm('Firebase', 'firebase'),
-  github('SQLite', 'nickhutchinson/libsqlite3-sys'),
+  custom('SQLite', 'sqlite'),
   npm('Realm', 'realm'),
   npm('Supabase', '@supabase/supabase-js'),
   npm('AWS Amplify', 'aws-amplify'),

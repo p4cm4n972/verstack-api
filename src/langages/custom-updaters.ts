@@ -305,7 +305,7 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       );
 
       // Find stable version: "Stable version" section with nginx-X.Y.Z
-      const stableMatch = res.data.match(/Stable version[\s\S]*?nginx-([\d.]+)/i);
+      const stableMatch = res.data.match(/Stable version[\s\S]*?nginx-(\d+\.\d+\.\d+)/i);
 
       if (stableMatch && stableMatch[1]) {
         const version = stableMatch[1];
@@ -313,7 +313,7 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         logger.log(`✅ Nginx (custom): current=${version}`);
       } else {
         // Fallback: find any nginx version
-        const fallbackMatch = res.data.match(/nginx-([\d.]+)\.tar\.gz/);
+        const fallbackMatch = res.data.match(/nginx-(\d+\.\d+\.\d+)\.tar\.gz/);
         if (fallbackMatch && fallbackMatch[1]) {
           await setVersion('Nginx', 'current', fallbackMatch[1]);
           logger.log(`✅ Nginx (custom): current=${fallbackMatch[1]}`);
@@ -378,6 +378,27 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       }
     } catch (error) {
       logger.error('❌ Erreur updateCustom [GetX]:', error);
+    }
+  },
+  sqlite: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(
+        http.get('https://www.sqlite.org/download.html', {
+          responseType: 'text' as any,
+          headers: { 'User-Agent': 'verstack-bot' }
+        })
+      );
+      // Find version like: PRODUCT,3.47.0,3470000
+      const match = res.data.match(/PRODUCT,(\d+\.\d+\.\d+),/);
+      if (match && match[1]) {
+        const version = match[1];
+        await setVersion('SQLite', 'current', version);
+        logger.log(`✅ SQLite (custom): current=${version}`);
+      } else {
+        logger.warn(`⚠️ SQLite (custom): impossible de détecter la version`);
+      }
+    } catch (error) {
+      logger.error('❌ Erreur updateCustom [SQLite]:', error);
     }
   }
 };

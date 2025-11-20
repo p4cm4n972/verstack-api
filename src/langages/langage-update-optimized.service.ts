@@ -57,6 +57,12 @@ export class LangageUpdateOptimizedService {
       case 'v':
         // V (Vlang) utilise des weekly releases : weekly.2025.46 → 2025.46
         return label.replace(/^weekly\./, '');
+      case 'yarn':
+        // Yarn: @yarnpkg/cli/4.11.0 → 4.11.0
+        return label.replace(/^@yarnpkg\/cli\//, '').replace(/^v/, '');
+      case 'maestro':
+        // Maestro: cli-2.0.10 → 2.0.10
+        return label.replace(/^cli-/, '').replace(/^v/, '');
     }
 
     // Règle générique : retirer le préfixe "v" si présent
