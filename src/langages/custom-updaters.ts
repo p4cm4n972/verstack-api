@@ -428,5 +428,33 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Modbus]:', err);
     }
+  },
+  // IA tools
+  pinecone: async (_config, { setVersion, logger }) => {
+    try {
+      // Pinecone is a managed service, version follows their API version
+      await setVersion('Pinecone', 'current', '2024.10');
+      logger.log('✅ Pinecone (custom): current=2024.10');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Pinecone]:', err);
+    }
+  },
+  coreml: async (_config, { setVersion, logger }) => {
+    try {
+      // CoreML version follows iOS/macOS SDK releases
+      await setVersion('CoreML', 'current', '8.0');
+      logger.log('✅ CoreML (custom): current=8.0 (iOS 18/macOS 15)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [CoreML]:', err);
+    }
+  },
+  tflite: async (_config, { setVersion, logger }) => {
+    try {
+      // TFLite version follows TensorFlow version - manual update
+      await setVersion('TFLite', 'current', '2.18.0');
+      logger.log('✅ TFLite (custom): current=2.18.0 (follows TensorFlow)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [TFLite]:', err);
+    }
   }
 };

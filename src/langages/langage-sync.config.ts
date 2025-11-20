@@ -196,5 +196,40 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Datascience - MLOps
   npm('MLflow', 'mlflow'),
   github('Airflow', 'apache/airflow'),
-  npm('DVC', 'dvc')
+  npm('DVC', 'dvc'),
+  // IA - LLM Frameworks
+  github('LangChain', 'langchain-ai/langchain'),
+  github('LlamaIndex', 'run-llama/llama_index'),
+  github('Haystack', 'deepset-ai/haystack'),
+  github('Semantic Kernel', 'microsoft/semantic-kernel'),
+  // IA - Computer Vision
+  github('OpenCV', 'opencv/opencv'),
+  github('YOLO', 'ultralytics/ultralytics'),
+  npm('Albumentations', 'albumentations'),
+  // IA - NLP
+  github('spaCy', 'explosion/spaCy'),
+  github('Transformers', 'huggingface/transformers'),
+  github('NLTK', 'nltk/nltk'),
+  github('Gensim', 'RaRe-Technologies/gensim'),
+  // IA - Vector Databases
+  custom('Pinecone', 'pinecone'),
+  github('Weaviate', 'weaviate/weaviate'),
+  github('Chroma', 'chroma-core/chroma'),
+  github('Milvus', 'milvus-io/milvus'),
+  github('Qdrant', 'qdrant/qdrant'),
+  // IA - Model Formats & Serving
+  github('ONNX', 'onnx/onnx'),
+  github('ONNX Runtime', 'microsoft/onnxruntime'),
+  github('TensorFlow Serving', 'tensorflow/serving'),
+  github('TorchServe', 'pytorch/serve'),
+  github('Triton', 'triton-inference-server/server'),
+  github('TensorRT', 'NVIDIA/TensorRT'),
+  custom('CoreML', 'coreml'),
+  custom('TFLite', 'tflite'),
+  // IA - AutoML
+  github('Auto-sklearn', 'automl/auto-sklearn'),
+  github('H2O.ai', 'h2oai/h2o-3'),
+  // IA - Reinforcement Learning
+  github('Stable Baselines3', 'DLR-RM/stable-baselines3'),
+  github('OpenAI Gym', 'Farama-Foundation/Gymnasium')
 ];
