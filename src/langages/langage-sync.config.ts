@@ -264,5 +264,45 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('Mirror', 'MirrorNetworking/Mirror'),
   // Game - Asset Tools
   github('Blender', 'blender/blender'),
-  github('Aseprite', 'aseprite/aseprite')
+  github('Aseprite', 'aseprite/aseprite'),
+  // DevOps - IaC
+  github('Terraform', 'hashicorp/terraform'),
+  github('Pulumi', 'pulumi/pulumi'),
+  github('Puppet', 'puppetlabs/puppet'),
+  github('Chef', 'chef/chef'),
+  // DevOps - CI/CD
+  github('Jenkins', 'jenkinsci/jenkins'),
+  custom('GitHub Actions', 'github-actions'),
+  github('GitLab CI', 'gitlabhq/gitlabhq'),
+  github('CircleCI', 'circleci/circleci-docs'),
+  custom('Azure DevOps', 'azure-devops'),
+  // DevOps - Containerization
+  github('Podman', 'containers/podman'),
+  // DevOps - Orchestration
+  github('Nomad', 'hashicorp/nomad'),
+  // DevOps - Monitoring
+  github('Prometheus', 'prometheus/prometheus'),
+  github('Grafana', 'grafana/grafana'),
+  custom('Datadog', 'datadog'),
+  // DevOps - Logging
+  github('Fluentd', 'fluent/fluentd'),
+  github('Loki', 'grafana/loki'),
+  // DevOps - Service Mesh
+  github('Istio', 'istio/istio'),
+  github('Linkerd', 'linkerd/linkerd2'),
+  github('Consul', 'hashicorp/consul'),
+  // DevOps - GitOps
+  github('ArgoCD', 'argoproj/argo-cd'),
+  github('Flux', 'fluxcd/flux2'),
+  // DevOps - Package Managers
+  github('Helm', 'helm/helm'),
+  github('Kustomize', 'kubernetes-sigs/kustomize'),
+  // DevOps - Security
+  github('Vault', 'hashicorp/vault'),
+  github('SonarQube', 'SonarSource/sonarqube'),
+  github('Trivy', 'aquasecurity/trivy'),
+  custom('Snyk', 'snyk'),
+  // DevOps - Testing
+  github('Selenium', 'SeleniumHQ/selenium'),
+  github('k6', 'grafana/k6')
 ];

@@ -520,5 +520,42 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Photon]:', err);
     }
+  },
+  // DevOps tools
+  'github-actions': async (_config, { setVersion, logger }) => {
+    try {
+      // GitHub Actions follows GitHub version/features
+      await setVersion('GitHub Actions', 'current', '2024.11');
+      logger.log('✅ GitHub Actions (custom): current=2024.11');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [GitHub Actions]:', err);
+    }
+  },
+  'azure-devops': async (_config, { setVersion, logger }) => {
+    try {
+      // Azure DevOps Server latest version
+      await setVersion('Azure DevOps', 'current', '2024');
+      logger.log('✅ Azure DevOps (custom): current=2024');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Azure DevOps]:', err);
+    }
+  },
+  datadog: async (_config, { setVersion, logger }) => {
+    try {
+      // Datadog Agent latest version
+      await setVersion('Datadog', 'current', '7.58');
+      logger.log('✅ Datadog (custom): current=7.58 (Agent)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Datadog]:', err);
+    }
+  },
+  snyk: async (_config, { setVersion, logger }) => {
+    try {
+      // Snyk CLI latest version
+      await setVersion('Snyk', 'current', '1.1298.0');
+      logger.log('✅ Snyk (custom): current=1.1298.0 (CLI)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Snyk]:', err);
+    }
   }
 };
