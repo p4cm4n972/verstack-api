@@ -231,5 +231,38 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('H2O.ai', 'h2oai/h2o-3'),
   // IA - Reinforcement Learning
   github('Stable Baselines3', 'DLR-RM/stable-baselines3'),
-  github('OpenAI Gym', 'Farama-Foundation/Gymnasium')
+  github('OpenAI Gym', 'Farama-Foundation/Gymnasium'),
+  // Game - Game Engines 3D
+  github('Unreal Engine', 'EpicGames/UnrealEngine'),
+  github('Godot', 'godotengine/godot'),
+  // Game - Game Engines 2D
+  github('GameMaker', 'YoYoGames/GameMaker-Manual'),
+  // Game - Web Game Frameworks
+  npm('Phaser', 'phaser'),
+  npm('Three.js', 'three'),
+  npm('Babylon.js', '@babylonjs/core'),
+  npm('PixiJS', 'pixi.js'),
+  github('PlayCanvas', 'playcanvas/engine'),
+  // Game - Cross-Platform Frameworks
+  github('libGDX', 'libgdx/libgdx'),
+  github('MonoGame', 'MonoGame/MonoGame'),
+  github('Cocos2d-x', 'cocos2d/cocos2d-x'),
+  github('Defold', 'defold/defold'),
+  // Game - Graphics APIs
+  custom('OpenGL', 'opengl'),
+  custom('Vulkan', 'vulkan'),
+  custom('DirectX', 'directx'),
+  custom('Metal', 'metal'),
+  // Game - Physics Engines
+  github('Box2D', 'erincatto/box2d'),
+  github('Bullet Physics', 'bulletphysics/bullet3'),
+  // Game - Audio Middleware
+  custom('FMOD', 'fmod'),
+  custom('Wwise', 'wwise'),
+  // Game - Networking
+  custom('Photon', 'photon'),
+  github('Mirror', 'MirrorNetworking/Mirror'),
+  // Game - Asset Tools
+  github('Blender', 'blender/blender'),
+  github('Aseprite', 'aseprite/aseprite')
 ];

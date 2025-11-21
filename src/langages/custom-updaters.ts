@@ -456,5 +456,69 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (err) {
       logger.error('❌ Erreur updateCustom [TFLite]:', err);
     }
+  },
+  // Game tools
+  opengl: async (_config, { setVersion, logger }) => {
+    try {
+      // OpenGL latest version
+      await setVersion('OpenGL', 'current', '4.6');
+      logger.log('✅ OpenGL (custom): current=4.6');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [OpenGL]:', err);
+    }
+  },
+  vulkan: async (_config, { setVersion, logger }) => {
+    try {
+      // Vulkan latest version
+      await setVersion('Vulkan', 'current', '1.3');
+      logger.log('✅ Vulkan (custom): current=1.3');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Vulkan]:', err);
+    }
+  },
+  directx: async (_config, { setVersion, logger }) => {
+    try {
+      // DirectX 12 latest
+      await setVersion('DirectX', 'current', '12');
+      logger.log('✅ DirectX (custom): current=12');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [DirectX]:', err);
+    }
+  },
+  metal: async (_config, { setVersion, logger }) => {
+    try {
+      // Metal version follows iOS/macOS SDK
+      await setVersion('Metal', 'current', '3.2');
+      logger.log('✅ Metal (custom): current=3.2 (iOS 18/macOS 15)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Metal]:', err);
+    }
+  },
+  fmod: async (_config, { setVersion, logger }) => {
+    try {
+      // FMOD Studio latest version
+      await setVersion('FMOD', 'current', '2.02');
+      logger.log('✅ FMOD (custom): current=2.02');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [FMOD]:', err);
+    }
+  },
+  wwise: async (_config, { setVersion, logger }) => {
+    try {
+      // Wwise latest version
+      await setVersion('Wwise', 'current', '2024.1');
+      logger.log('✅ Wwise (custom): current=2024.1');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Wwise]:', err);
+    }
+  },
+  photon: async (_config, { setVersion, logger }) => {
+    try {
+      // Photon Engine latest
+      await setVersion('Photon', 'current', '5.0');
+      logger.log('✅ Photon (custom): current=5.0');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Photon]:', err);
+    }
   }
 };
