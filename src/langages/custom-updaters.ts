@@ -558,34 +558,106 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       logger.error('❌ Erreur updateCustom [Snyk]:', err);
     }
   },
-  // Fixed versions to protect from corrupted external sources
-  Perl: async (_config, { setVersion, logger }) => {
-    await setVersion('Perl', 'current', '5.40.0');
-    logger.log('✅ Perl (custom): current=5.40.0');
+  // Custom updaters for tools with corrupted external sources
+  perl: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use perl.org official downloads page
+      const res = await firstValueFrom(http.get('https://www.perl.org/get.html', { responseType: 'text' as any }));
+      const match = res.data.match(/perl-(\d+\.\d+\.\d+)\.tar/);
+      if (match?.[1]) {
+        await setVersion('Perl', 'current', match[1]);
+        logger.log(`✅ Perl (custom): current=${match[1]}`);
+      } else {
+        logger.warn('⚠️ Perl (custom): version introuvable sur perl.org');
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Perl]:', err);
+    }
   },
-  Haskell: async (_config, { setVersion, logger }) => {
-    await setVersion('Haskell', 'current', '9.10.1');
-    logger.log('✅ Haskell (custom): current=9.10.1 (GHC)');
+  haskell: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use GHC downloads page
+      const res = await firstValueFrom(http.get('https://www.haskell.org/ghc/download.html', { responseType: 'text' as any }));
+      const match = res.data.match(/GHC\s+(\d+\.\d+\.\d+)/);
+      if (match?.[1]) {
+        await setVersion('Haskell', 'current', match[1]);
+        logger.log(`✅ Haskell (custom): current=${match[1]} (GHC)`);
+      } else {
+        logger.warn('⚠️ Haskell (custom): version introuvable sur haskell.org');
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Haskell]:', err);
+    }
   },
-  Django: async (_config, { setVersion, logger }) => {
-    await setVersion('Django', 'current', '5.1.4');
-    await setVersion('Django', 'lts', '4.2.17');
-    logger.log('✅ Django (custom): current=5.1.4, lts=4.2.17');
+  django: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use PyPI instead of GitHub
+      const res = await firstValueFrom(http.get('https://pypi.org/pypi/Django/json'));
+      const latest = res.data?.info?.version;
+      if (latest) {
+        await setVersion('Django', 'current', latest);
+        // LTS: Django 4.2.x
+        await setVersion('Django', 'lts', '4.2');
+        logger.log(`✅ Django (custom via PyPI): current=${latest}, lts=4.2`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Django]:', err);
+    }
   },
-  PlatformIO: async (_config, { setVersion, logger }) => {
-    await setVersion('PlatformIO', 'current', '6.1.16');
-    logger.log('✅ PlatformIO (custom): current=6.1.16');
+  platformio: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use GitHub releases instead of npm (npm has malicious 0.0.1-security)
+      const res = await firstValueFrom(http.get('https://api.github.com/repos/platformio/platformio-core/releases/latest', {
+        headers: { 'User-Agent': 'verstack-bot', ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}) }
+      }));
+      const version = res.data?.tag_name?.replace(/^v/, '');
+      if (version) {
+        await setVersion('PlatformIO', 'current', version);
+        logger.log(`✅ PlatformIO (custom via GitHub): current=${version}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [PlatformIO]:', err);
+    }
   },
-  CppUTest: async (_config, { setVersion, logger }) => {
-    await setVersion('CppUTest', 'current', '4.0');
-    logger.log('✅ CppUTest (custom): current=4.0');
+  cpputest: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use GitHub releases (tags return "latest-passing-build")
+      const res = await firstValueFrom(http.get('https://api.github.com/repos/cpputest/cpputest/releases/latest', {
+        headers: { 'User-Agent': 'verstack-bot', ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}) }
+      }));
+      const version = res.data?.tag_name?.replace(/^v/, '');
+      if (version) {
+        await setVersion('CppUTest', 'current', version);
+        logger.log(`✅ CppUTest (custom via GitHub): current=${version}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [CppUTest]:', err);
+    }
   },
-  Seaborn: async (_config, { setVersion, logger }) => {
-    await setVersion('Seaborn', 'current', '0.13.2');
-    logger.log('✅ Seaborn (custom): current=0.13.2');
+  seaborn: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use PyPI instead of npm (npm has malicious 0.0.1-security)
+      const res = await firstValueFrom(http.get('https://pypi.org/pypi/seaborn/json'));
+      const latest = res.data?.info?.version;
+      if (latest) {
+        await setVersion('Seaborn', 'current', latest);
+        logger.log(`✅ Seaborn (custom via PyPI): current=${latest}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Seaborn]:', err);
+    }
   },
-  Jupyter: async (_config, { setVersion, logger }) => {
-    await setVersion('Jupyter', 'current', '1.1.1');
-    logger.log('✅ Jupyter (custom): current=1.1.1 (jupyter-core)');
+  jupyter: async (_config, { http, setVersion, logger }) => {
+    try {
+      // Use PyPI jupyter-core package
+      const res = await firstValueFrom(http.get('https://pypi.org/pypi/jupyter-core/json'));
+      const latest = res.data?.info?.version;
+      if (latest) {
+        await setVersion('Jupyter', 'current', latest);
+        logger.log(`✅ Jupyter (custom via PyPI): current=${latest} (jupyter-core)`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Jupyter]:', err);
+    }
   }
 };
