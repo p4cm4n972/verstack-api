@@ -79,6 +79,15 @@ export class LangageUpdateService {
       case 'polars':
         // Polars: py-1.35.2 → 1.35.2
         return label.replace(/^py-/, '');
+      case 'langchain':
+        // LangChain: langchain-core==1.1.0 → 1.1.0
+        return label.replace(/^.*langchain-core==/, '');
+      case 'semantic kernel':
+        // Semantic Kernel: python-1.38.0 → 1.38.0
+        return label.replace(/^python-/, '');
+      case 'spacy':
+        // spaCy: release-v3.8.11 → 3.8.11
+        return label.replace(/^release-v/, '');
       case 'laravel':
       case 'bootstrap':
       case 'kubernetes':
