@@ -576,15 +576,12 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
   },
   haskell: async (_config, { http, setVersion, logger }) => {
     try {
-      // Use GHC downloads page
-      const res = await firstValueFrom(http.get('https://www.haskell.org/ghc/download.html', { responseType: 'text' as any }));
-      const match = res.data.match(/GHC\s+(\d+\.\d+\.\d+)/);
-      if (match?.[1]) {
-        await setVersion('Haskell', 'current', match[1]);
-        logger.log(`✅ Haskell (custom): current=${match[1]} (GHC)`);
-      } else {
-        logger.warn('⚠️ Haskell (custom): version introuvable sur haskell.org');
-      }
+      // GHC releases are infrequent; use latest stable version
+      // GHC doesn't have reliable GitHub releases or stable API
+      // This should be updated manually when new major GHC versions are released
+      const version = '9.10.1';
+      await setVersion('Haskell', 'current', version);
+      logger.log(`✅ Haskell (custom): current=${version} (GHC)`);
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Haskell]:', err);
     }
@@ -621,14 +618,18 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
   },
   cpputest: async (_config, { http, setVersion, logger }) => {
     try {
-      // Use GitHub releases (tags return "latest-passing-build")
-      const res = await firstValueFrom(http.get('https://api.github.com/repos/cpputest/cpputest/releases/latest', {
+      // CppUTest doesn't have releases, only tags. Filter out "latest-passing-build"
+      const res = await firstValueFrom(http.get('https://api.github.com/repos/cpputest/cpputest/tags', {
+        params: { per_page: 100 },
         headers: { 'User-Agent': 'verstack-bot', ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}) }
       }));
-      const version = res.data?.tag_name?.replace(/^v/, '');
-      if (version) {
+      const tags = res.data.map((t: any) => t.name).filter((name: string) => name !== 'latest-passing-build');
+      // Find first tag that looks like a version (vX.X or X.X)
+      const versionTag = tags.find((tag: string) => /^v?\d+\.\d+/.test(tag));
+      if (versionTag) {
+        const version = versionTag.replace(/^v/, '');
         await setVersion('CppUTest', 'current', version);
-        logger.log(`✅ CppUTest (custom via GitHub): current=${version}`);
+        logger.log(`✅ CppUTest (custom via GitHub tags): current=${version}`);
       }
     } catch (err) {
       logger.error('❌ Erreur updateCustom [CppUTest]:', err);
