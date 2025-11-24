@@ -88,6 +88,21 @@ export class LangageUpdateService {
       case 'spacy':
         // spaCy: release-v3.8.11 → 3.8.11
         return label.replace(/^release-v/, '');
+      case 'godot':
+        // Godot: 4.5.1-stable → 4.5.1
+        return label.replace(/-stable$/, '');
+      case 'jenkins':
+        // Jenkins: jenkins-2.538 → 2.538
+        return label.replace(/^jenkins-/, '');
+      case 'linkerd':
+        // Linkerd: edge-25.11.2 → 25.11.2
+        return label.replace(/^edge-/, '');
+      case 'kustomize':
+        // Kustomize: kustomize/v5.8.0 → 5.8.0
+        return label.replace(/^kustomize\/v/, '');
+      case 'selenium':
+        // Selenium: selenium-4.38.0 → 4.38.0
+        return label.replace(/^selenium-/, '');
       case 'laravel':
       case 'bootstrap':
       case 'kubernetes':
