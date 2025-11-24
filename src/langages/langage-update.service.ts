@@ -73,6 +73,9 @@ export class LangageUpdateService {
       case 'v':
         // V (Vlang) utilise des weekly releases : weekly.2025.46 → 2025.46
         return label.replace(/^weekly\./, '');
+      case 'mbed os':
+        // Mbed OS: mbed-os-6.17.0 → 6.17.0
+        return label.replace(/^mbed-os-/, '');
       case 'laravel':
       case 'bootstrap':
       case 'kubernetes':
