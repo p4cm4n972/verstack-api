@@ -76,6 +76,9 @@ export class LangageUpdateService {
       case 'mbed os':
         // Mbed OS: mbed-os-6.17.0 → 6.17.0
         return label.replace(/^mbed-os-/, '');
+      case 'polars':
+        // Polars: py-1.35.2 → 1.35.2
+        return label.replace(/^py-/, '');
       case 'laravel':
       case 'bootstrap':
       case 'kubernetes':
