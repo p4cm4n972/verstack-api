@@ -64,6 +64,9 @@ export class LangageUpdateService {
         // GitHub releases for moby/moby sometimes use tags like "docker-v29.0.0".
         // Remove the repository prefix and any leading 'v'.
         return label.replace(/^docker[-_]?/i, '').replace(/^v(?=\d)/i, '').trim();
+      case 'yarn':
+        // Yarn: @yarnpkg/cli/4.11.0 → 4.11.0
+        return label.replace(/^@yarnpkg\/cli\//, '').replace(/^v/, '');
       case 'laravel':
       case 'bootstrap':
       case 'kubernetes':
@@ -257,27 +260,45 @@ export class LangageUpdateService {
       return; // Évite le traitement standard
     }
 
-    // Traitement standard via helper
-    const latest = extractLatestFromTags(tags);
+    // --- DEBUT DE L'OPTIMISATION ---
+
+    let latest: string | null = null;
+    const validVersionsForLts: string[] = [];
+
+    // Parcours unique (O(T)) pour trouver 'latest' et préparer la recherche 'lts'
+    for (const tag of tags) {
+      const currentVersion = semver.coerce(tag)?.version;
+      if (currentVersion && !semver.prerelease(currentVersion)) {
+        // Ajoute à la liste pour la future recherche LTS, si nécessaire
+        if (config.ltsSupport) {
+          validVersionsForLts.push(currentVersion);
+        }
+
+        // Trouve la version la plus récente en O(1)
+        if (latest === null || semver.gt(currentVersion, latest)) {
+          latest = currentVersion;
+        }
+      }
+    }
+    
+    // Si la recherche principale n'a rien donné, on tente la méthode de secours
+    if (!latest) {
+      latest = extractFallbackVersionFromTags(tags);
+    }
+    
     if (latest) {
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
-    } else {
-      const fallback = extractFallbackVersionFromTags(tags);
-      if (fallback) {
-        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback));
-      }
     }
 
     if (config.ltsSupport && config.ltsTagPrefix) {
-      const versions = tags
-        .map(t => semver.coerce(t)?.version)
-        .filter((v): v is string => Boolean(v) && !semver.prerelease(v))
-        .sort(semver.rcompare);
-      const lts = versions.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
+      // Recherche LTS en O(T) sur le tableau déjà filtré, SANS tri.
+      const lts = validVersionsForLts.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
       if (lts) {
         await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
       }
     }
+    
+    // --- FIN DE L'OPTIMISATION ---
 
     const ltsInfo = config.ltsSupport ? `, lts=${config.ltsTagPrefix ?? 'N/A'}` : '';
     this.logger.log(`✅ ${config.nameInDb} (GitHub tags): latest=${latest ?? 'N/A'}${ltsInfo}`);
