@@ -557,5 +557,35 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Snyk]:', err);
     }
+  },
+  // Fixed versions to protect from corrupted external sources
+  Perl: async (_config, { setVersion, logger }) => {
+    await setVersion('Perl', 'current', '5.40.0');
+    logger.log('✅ Perl (custom): current=5.40.0');
+  },
+  Haskell: async (_config, { setVersion, logger }) => {
+    await setVersion('Haskell', 'current', '9.10.1');
+    logger.log('✅ Haskell (custom): current=9.10.1 (GHC)');
+  },
+  Django: async (_config, { setVersion, logger }) => {
+    await setVersion('Django', 'current', '5.1.4');
+    await setVersion('Django', 'lts', '4.2.17');
+    logger.log('✅ Django (custom): current=5.1.4, lts=4.2.17');
+  },
+  PlatformIO: async (_config, { setVersion, logger }) => {
+    await setVersion('PlatformIO', 'current', '6.1.16');
+    logger.log('✅ PlatformIO (custom): current=6.1.16');
+  },
+  CppUTest: async (_config, { setVersion, logger }) => {
+    await setVersion('CppUTest', 'current', '4.0');
+    logger.log('✅ CppUTest (custom): current=4.0');
+  },
+  Seaborn: async (_config, { setVersion, logger }) => {
+    await setVersion('Seaborn', 'current', '0.13.2');
+    logger.log('✅ Seaborn (custom): current=0.13.2');
+  },
+  Jupyter: async (_config, { setVersion, logger }) => {
+    await setVersion('Jupyter', 'current', '1.1.1');
+    logger.log('✅ Jupyter (custom): current=1.1.1 (jupyter-core)');
   }
 };

@@ -85,11 +85,11 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('Zig', 'ziglang/zig'),
   github('Fortran', 'fortran-lang/stdlib'),
   custom('R', 'wch/r-source', { useTags: true }),
-  github('Perl', 'Perl/perl5', { useTags: true }),
+  custom('Perl', 'perl'),
   custom('Unity', 'unity', { ltsSupport: true }),
   npm('Express.js', 'express'),
   github('Spring', 'spring-projects/spring-framework'),
-  github('Django', 'django/django', { useTags: true, ltsSupport: true, ltsTagPrefix: '4.2' }),
+  custom('Django', 'django', { ltsSupport: true }),
   custom('JSON', 'json'),
   github('Bash', 'bminor/bash', { useTags: true }),
   github('Erlang', 'erlang/otp'),
@@ -97,7 +97,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('V', 'vlang/v'),
   github('WebAssembly', 'WebAssembly/spec', { useTags: true }),
   custom('SQL', 'sql'),
-  github('Haskell', 'ghc/ghc', { useTags: true }),
+  custom('Haskell', 'haskell'),
   github('Clojure', 'clojure/clojure', { useTags: true }),
   github('Flang', 'flang-compiler/flang', { useTags: true }),
   github('OCaml', 'ocaml/ocaml'),
@@ -165,7 +165,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('STM32Cube', 'STMicroelectronics/STM32CubeF4'),
   github('Nordic SDK', 'nrfconnect/sdk-nrf'),
   // Embedded - Build & Tools
-  npm('PlatformIO', 'platformio'),
+  custom('PlatformIO', 'platformio'),
   github('OpenOCD', 'openocd-org/openocd'),
   // Embedded - Protocols
   custom('MQTT', 'mqtt'),
@@ -173,7 +173,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   custom('Modbus', 'modbus'),
   // Embedded - Testing
   github('Unity', 'ThrowTheSwitch/Unity'),
-  github('CppUTest', 'cpputest/cpputest'),
+  custom('CppUTest', 'cpputest'),
   // Datascience - ML/DL Frameworks
   npm('TensorFlow', 'tensorflow'),
   npm('PyTorch', 'torch'),
@@ -190,9 +190,9 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Datascience - Visualization
   npm('Matplotlib', 'matplotlib'),
   npm('Plotly', 'plotly.js'),
-  npm('Seaborn', 'seaborn'),
+  custom('Seaborn', 'seaborn'),
   // Datascience - Notebooks
-  npm('Jupyter', 'jupyter'),
+  custom('Jupyter', 'jupyter'),
   // Datascience - MLOps
   npm('MLflow', 'mlflow'),
   github('Airflow', 'apache/airflow'),
