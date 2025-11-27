@@ -15,7 +15,7 @@ import { UsersService } from '../../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { HashingService } from '../hashing/hashing.service';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import jwtConfig from '../config/jwt.config';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
 import { RefreshTokenDto } from './dto/refresh-token.dto/refresh-token.dto';
