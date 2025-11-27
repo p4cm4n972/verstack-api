@@ -66,21 +66,6 @@ export class SubscriptionsService {
       await user.save();
     }
 
-    // Créer un coupon de réduction si prorata activé
-    let couponId: string | undefined;
-    if (dto.prorated && amount < 0.99) {
-      const discountPercent = Math.round(((0.99 - amount) / 0.99) * 100);
-      const coupon = await this.stripe.coupons.create({
-        percent_off: discountPercent,
-        duration: 'once',
-        name: `Prorata ${proration.daysRemaining} jours`,
-      });
-      couponId = coupon.id;
-    }
-
-    // Récupérer les URLs depuis la config
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://verstack.io';
-
     // Créer la session de paiement
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
@@ -92,7 +77,6 @@ export class SubscriptionsService {
           quantity: 1,
         },
       ],
-      discounts: couponId ? [{ coupon: couponId }] : undefined,
       subscription_data: {
         metadata: {
           userId: user._id.toString(),
@@ -101,8 +85,8 @@ export class SubscriptionsService {
           nextRenewalDate: proration.nextRenewalDate.toISOString(),
         },
       },
-      success_url: `${frontendUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/subscription`,
+      success_url: `${this.configService.get<string>('FRONTEND_URL')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${this.configService.get<string>('FRONTEND_URL')}/subscription`,
       metadata: { userId: user._id.toString() },
     });
 
