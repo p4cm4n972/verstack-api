@@ -34,7 +34,7 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Regular, Role.Subscriber)
   @Patch(':id')
   update(@Param('id') id: any, @Body() body) {
     return this.usersService.update(id, body);

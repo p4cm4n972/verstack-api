@@ -67,7 +67,7 @@ export class WebhooksService {
 
     // Mettre à jour le rôle de l'utilisateur
     await this.userModel.findByIdAndUpdate(userId, {
-      role: Role.subscriber,
+      role: Role.Subscriber,
       subscriptionId: subscription._id,
     });
 
