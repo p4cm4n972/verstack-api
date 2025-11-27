@@ -67,3 +67,6 @@ STRIPE_SETUP_GUIDE.md
 *.bat
 *.http
 test-*.js
+
+# Production configuration with secrets
+ecosystem.config.js
