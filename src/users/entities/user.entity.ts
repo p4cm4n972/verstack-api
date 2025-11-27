@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Role } from '../enums/role.enum';
 import { Permission, PermissionType } from '../../iam/permission.type';
 
@@ -55,6 +55,11 @@ export class User extends Document {
     @Prop({ default: false })
     isEmailVerified: boolean;
 
+    @Prop()
+    stripeCustomerId?: string;
+
+    @Prop({ type: Types.ObjectId, ref: 'Subscription' })
+    subscriptionId?: Types.ObjectId;
 
 }
 

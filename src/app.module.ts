@@ -13,6 +13,13 @@ import { AdminModule } from './admin/admin.module';
 import { MailService } from './mail.service';
 import { MailerTestService } from './mailer-test.service';
 import { CustomLoggerService } from './custom-logger/custom-logger.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { SubscriptionCleanupService } from './jobs/subscription-cleanup.service';
+import { Subscription, SubscriptionSchema } from './subscriptions/schemas/subscription.schema';
+import { User, UserSchema } from './users/entities/user.entity';
+import stripeConfig from './config/stripe.config';
 
 @Module({
   imports: [
@@ -24,6 +31,7 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '/home/ubuntu/.env'],
+      load: [stripeConfig],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
@@ -37,8 +45,15 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
           },
     }
     ),
+    MongooseModule.forFeature([
+      { name: Subscription.name, schema: SubscriptionSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
+    ScheduleModule.forRoot(),
+    SubscriptionsModule,
+    WebhooksModule,
   ],
   controllers: [AppController, MailerTestController],
-  providers: [AppService, MailService, MailerTestService, CustomLoggerService],
+  providers: [AppService, MailService, MailerTestService, CustomLoggerService, SubscriptionCleanupService],
 })
 export class AppModule { }

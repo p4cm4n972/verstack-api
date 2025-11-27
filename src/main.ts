@@ -8,6 +8,8 @@ import { winstonLoggerConfig } from './common/logger/winston-logger.config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger(winstonLoggerConfig),
+    // IMPORTANT: raw body pour webhooks Stripe
+    rawBody: true,
   });
   app.useGlobalPipes(
     new ValidationPipe({

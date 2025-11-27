@@ -54,3 +54,16 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Documentation files (for development only)
+CARTES_TEST_STRIPE.md
+DEMARRAGE_RAPIDE.md
+PASSAGE_PRODUCTION.md
+PRODUCTION_CHECKLIST.md
+QUICKSTART_STRIPE.md
+STRIPE_SETUP_GUIDE.md
+
+# Test scripts and utilities
+*.bat
+*.http
+test-*.js

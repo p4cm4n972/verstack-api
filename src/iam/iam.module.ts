@@ -39,5 +39,12 @@ import { MailService } from '../mail.service';
     BcryptService,
     MailService
   ],
+  exports: [
+    AccessTokenGuard,
+    JwtModule,
+    ConfigModule,
+    AuthenticationService,
+    UsersService,
+  ],
 })
 export class IamModule {}
