@@ -39,4 +39,12 @@ export class UsersService {
             exec();
     }
 
+    async incrementProfileViews(id: string) {
+        return this.userModel.findByIdAndUpdate(
+            id,
+            { $inc: { profileViews: 1 } },
+            { new: true }
+        ).exec();
+    }
+
 }

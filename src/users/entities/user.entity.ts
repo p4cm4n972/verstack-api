@@ -52,6 +52,15 @@ export class User extends Document {
     @Prop({ type: [Object], default: [] })
     favoris: object[];
 
+    @Prop({ type: [Object], default: [] })
+    projects: object[];
+
+    @Prop({ type: [String], default: [] })
+    contacts: string[];
+
+    @Prop({ default: 0 })
+    profileViews: number;
+
     @Prop({ default: false })
     isEmailVerified: boolean;
 

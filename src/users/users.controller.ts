@@ -24,7 +24,9 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: any) {
+  async findOne(@Param('id') id: any) {
+    // Incrémenter les vues du profil
+    await this.usersService.incrementProfileViews(id);
     return this.usersService.findOne(id);
   }
 
