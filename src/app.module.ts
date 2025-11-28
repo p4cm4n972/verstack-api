@@ -20,6 +20,7 @@ import { SubscriptionCleanupService } from './jobs/subscription-cleanup.service'
 import { Subscription, SubscriptionSchema } from './subscriptions/schemas/subscription.schema';
 import { User, UserSchema } from './users/entities/user.entity';
 import stripeConfig from './config/stripe.config';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import stripeConfig from './config/stripe.config';
     IamModule,
     NewsModule,
     AdminModule,
+    StatsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '/home/ubuntu/.env'],
