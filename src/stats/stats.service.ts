@@ -100,14 +100,11 @@ export class StatsService {
   }
 
   /**
-   * Initialise les données par défaut si vide
+   * Initialise les données par défaut (supprime les anciennes données)
    */
   async initializeDefaultData() {
-    const count = await this.trendModel.countDocuments();
-
-    if (count > 0) {
-      return { message: 'Data already initialized', count };
-    }
+    // Supprimer toutes les données existantes
+    await this.trendModel.deleteMany({});
 
     const defaultTrends: Partial<PopularityTrend>[] = [
       {
@@ -138,12 +135,48 @@ export class StatsService {
         lastUpdated: new Date(),
       },
       {
+        language: 'C++',
+        popularity: [7.5, 7.6, 7.8, 8.0, 8.2, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9],
+        sources: { stackoverflow: 45, tiobe: 65, github: 50 },
+        average: 53,
+        trend: 'stable',
+        metadata: { color: '#00599c', category: 'System' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'C#',
+        popularity: [8.0, 8.2, 8.5, 8.7, 8.9, 9.0, 9.1, 9.2, 9.3, 9.4, 9.5],
+        sources: { stackoverflow: 50, tiobe: 58, github: 48 },
+        average: 52,
+        trend: 'stable',
+        metadata: { color: '#239120', category: 'General Purpose' },
+        lastUpdated: new Date(),
+      },
+      {
         language: 'TypeScript',
         popularity: [0.5, 1.0, 1.5, 2.0, 3.0, 4.5, 5.5, 6.5, 7.0, 7.5, 8.0],
         sources: { stackoverflow: 70, tiobe: 0, github: 80 },
         average: 50,
         trend: 'up',
         metadata: { color: '#3178c6', category: 'Web/Frontend' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'PHP',
+        popularity: [9.0, 8.8, 8.6, 8.5, 8.4, 8.3, 8.2, 8.1, 8.0, 7.9, 7.8],
+        sources: { stackoverflow: 40, tiobe: 45, github: 35 },
+        average: 40,
+        trend: 'down',
+        metadata: { color: '#777bb4', category: 'Web/Backend' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'R',
+        popularity: [4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 8.6],
+        sources: { stackoverflow: 30, tiobe: 40, github: 25 },
+        average: 32,
+        trend: 'up',
+        metadata: { color: '#276dc3', category: 'Data Science' },
         lastUpdated: new Date(),
       },
       {
@@ -162,6 +195,96 @@ export class StatsService {
         average: 36,
         trend: 'up',
         metadata: { color: '#ce422b', category: 'System' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'C',
+        popularity: [14.0, 13.5, 13.0, 12.5, 12.0, 11.5, 11.0, 10.8, 10.6, 10.5, 10.4],
+        sources: { stackoverflow: 25, tiobe: 80, github: 30 },
+        average: 45,
+        trend: 'down',
+        metadata: { color: '#a8b9cc', category: 'System' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Swift',
+        popularity: [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 5.8],
+        sources: { stackoverflow: 35, tiobe: 20, github: 45 },
+        average: 33,
+        trend: 'up',
+        metadata: { color: '#fa7343', category: 'Mobile' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Kotlin',
+        popularity: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0],
+        sources: { stackoverflow: 30, tiobe: 18, github: 40 },
+        average: 29,
+        trend: 'up',
+        metadata: { color: '#7f52ff', category: 'Mobile' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Ruby',
+        popularity: [6.0, 5.8, 5.5, 5.2, 5.0, 4.8, 4.5, 4.3, 4.1, 4.0, 3.9],
+        sources: { stackoverflow: 25, tiobe: 30, github: 35 },
+        average: 30,
+        trend: 'down',
+        metadata: { color: '#cc342d', category: 'Web/Backend' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Scala',
+        popularity: [3.0, 3.2, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2],
+        sources: { stackoverflow: 20, tiobe: 25, github: 22 },
+        average: 22,
+        trend: 'stable',
+        metadata: { color: '#dc322f', category: 'General Purpose' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Dart',
+        popularity: [0.0, 0.2, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5],
+        sources: { stackoverflow: 22, tiobe: 12, github: 28 },
+        average: 21,
+        trend: 'up',
+        metadata: { color: '#01a14e', category: 'Mobile' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'MATLAB',
+        popularity: [5.5, 5.3, 5.1, 5.0, 4.9, 4.8, 4.7, 4.6, 4.5, 4.4, 4.3],
+        sources: { stackoverflow: 15, tiobe: 35, github: 10 },
+        average: 20,
+        trend: 'down',
+        metadata: { color: '#0076a8', category: 'Data Science' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Shell',
+        popularity: [3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5],
+        sources: { stackoverflow: 18, tiobe: 15, github: 50 },
+        average: 28,
+        trend: 'stable',
+        metadata: { color: '#4eaa25', category: 'Scripting' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Objective-C',
+        popularity: [8.0, 7.0, 6.0, 5.0, 4.0, 3.5, 3.0, 2.5, 2.2, 2.0, 1.8],
+        sources: { stackoverflow: 10, tiobe: 25, github: 15 },
+        average: 17,
+        trend: 'down',
+        metadata: { color: '#438eff', category: 'Mobile' },
+        lastUpdated: new Date(),
+      },
+      {
+        language: 'Perl',
+        popularity: [5.0, 4.5, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2, 2.0, 1.9],
+        sources: { stackoverflow: 8, tiobe: 22, github: 12 },
+        average: 14,
+        trend: 'down',
+        metadata: { color: '#0673a5', category: 'Scripting' },
         lastUpdated: new Date(),
       },
     ];
