@@ -3,11 +3,15 @@ import { StatsService } from './stats.service';
 import { PopularityTrend } from './entities/popularity-trend.entity';
 import { Auth } from '../iam/authentication/decorators/auth.decorator';
 import { AuthType } from '../iam/authentication/enums/auth-type.enum';
+import { TrendsUpdateService } from './services/trends-update.service';
 
 @Auth(AuthType.None)
 @Controller('api/stats')
 export class StatsController {
-  constructor(private readonly statsService: StatsService) {}
+  constructor(
+    private readonly statsService: StatsService,
+    private readonly trendsUpdateService: TrendsUpdateService,
+  ) {}
 
   /**
    * GET /api/stats/trends
@@ -61,5 +65,14 @@ export class StatsController {
   @Post('initialize')
   async initializeData() {
     return this.statsService.initializeDefaultData();
+  }
+
+  /**
+   * POST /api/stats/refresh
+   * Force une mise à jour depuis les sources externes
+   */
+  @Post('refresh')
+  async refreshTrends() {
+    return this.trendsUpdateService.updateTrendsFromExternalSources();
   }
 }
