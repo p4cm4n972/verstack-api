@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -12,9 +13,16 @@ interface StackOverflowResponse {
   items: StackOverflowTag[];
 }
 
+interface GitHubSearchResponse {
+  total_count: number;
+  items: any[];
+}
+
 @Injectable()
 export class ExternalDataService {
   private readonly STACKOVERFLOW_API = 'https://api.stackexchange.com/2.3/tags';
+  private readonly GITHUB_API = 'https://api.github.com/search/repositories';
+  private readonly githubToken: string;
 
   // Mapping des noms de langages pour les différentes sources
   private readonly LANGUAGE_MAPPING: Map<string, { stackoverflow: string; github: string }> = new Map([
@@ -40,7 +48,12 @@ export class ExternalDataService {
     ['Perl', { stackoverflow: 'perl', github: 'perl' }],
   ]);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.githubToken = this.configService.get<string>('GITHUB_TOKEN');
+  }
 
   /**
    * Récupère la popularité depuis Stack Overflow
@@ -124,33 +137,87 @@ export class ExternalDataService {
   }
 
   /**
-   * Calcule un score GitHub approximatif basé sur l'activité
-   * Note: Nécessiterait un token GitHub pour des données réelles
+   * Récupère la popularité depuis GitHub API
    */
-  getGitHubScores(): Map<string, number> {
-    // Ces scores sont des approximations
-    return new Map([
-      ['Python', 95],
-      ['JavaScript', 90],
-      ['Java', 68],
-      ['TypeScript', 80],
-      ['C++', 50],
-      ['C#', 48],
-      ['PHP', 35],
-      ['Go', 60],
-      ['Rust', 55],
-      ['Ruby', 35],
-      ['Swift', 45],
-      ['Kotlin', 40],
-      ['C', 30],
-      ['R', 25],
-      ['Shell', 50],
-      ['Scala', 22],
-      ['Dart', 28],
-      ['MATLAB', 10],
-      ['Objective-C', 15],
-      ['Perl', 12],
-    ]);
+  async getGitHubScores(languages: string[]): Promise<Map<string, number>> {
+    const popularityMap = new Map<string, number>();
+    const counts: number[] = [];
+
+    try {
+      // Récupérer le nombre de repos pour chaque langage
+      for (const language of languages) {
+        const mapping = this.LANGUAGE_MAPPING.get(language);
+        if (!mapping) continue;
+
+        try {
+          const params = {
+            q: `language:${mapping.github}`,
+            per_page: 1,
+          };
+
+          const headers: any = {
+            'Accept': 'application/vnd.github.v3+json',
+          };
+
+          // Ajouter le token si disponible
+          if (this.githubToken) {
+            headers['Authorization'] = `Bearer ${this.githubToken}`;
+          }
+
+          const response = await firstValueFrom(
+            this.httpService.get<GitHubSearchResponse>(this.GITHUB_API, {
+              params,
+              headers
+            }).pipe(map(res => res.data))
+          );
+
+          counts.push(response.total_count);
+          popularityMap.set(language, response.total_count);
+
+          // Petit délai pour éviter le rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Error fetching GitHub data for ${language}:`, error.message);
+          popularityMap.set(language, 0);
+        }
+      }
+
+      // Normaliser les scores sur 100
+      const maxCount = Math.max(...counts.filter(c => c > 0));
+      if (maxCount > 0) {
+        for (const [language, count] of popularityMap.entries()) {
+          const normalizedScore = (count / maxCount) * 100;
+          popularityMap.set(language, Math.round(normalizedScore));
+        }
+      }
+
+      return popularityMap;
+    } catch (error) {
+      console.error('Error fetching GitHub data:', error);
+      // Fallback vers des scores approximatifs en cas d'erreur
+      return new Map([
+        ['Python', 95],
+        ['JavaScript', 90],
+        ['Java', 68],
+        ['TypeScript', 80],
+        ['C++', 50],
+        ['C#', 48],
+        ['PHP', 35],
+        ['Go', 60],
+        ['Rust', 55],
+        ['Ruby', 35],
+        ['Swift', 45],
+        ['Kotlin', 40],
+        ['C', 30],
+        ['R', 25],
+        ['Shell', 50],
+        ['Scala', 22],
+        ['Dart', 28],
+        ['MATLAB', 10],
+        ['Objective-C', 15],
+        ['Perl', 12],
+      ]);
+    }
   }
 
   /**
@@ -159,7 +226,7 @@ export class ExternalDataService {
   async getAggregatedScores(languages: string[]): Promise<Map<string, { stackoverflow: number; tiobe: number; github: number; average: number }>> {
     const stackOverflowScores = await this.getStackOverflowPopularity(languages);
     const tiobeScores = this.getTIOBEScores();
-    const githubScores = this.getGitHubScores();
+    const githubScores = await this.getGitHubScores(languages);
 
     const aggregated = new Map<string, { stackoverflow: number; tiobe: number; github: number; average: number }>();
 
