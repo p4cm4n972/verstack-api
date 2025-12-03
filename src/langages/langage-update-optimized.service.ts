@@ -210,8 +210,8 @@ export class LangageUpdateOptimizedService {
     }
 
     // Récupérer les dates de publication depuis npm
-    const latestDate = times[latest] ?? null;
-    const ltsDate = lts ? (times[lts] ?? null) : null;
+    const latestDate = times[latest] ?? undefined;
+    const ltsDate = lts ? (times[lts] ?? undefined) : undefined;
 
     await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), latestDate);
     if (config.ltsSupport && lts) {
@@ -291,17 +291,17 @@ export class LangageUpdateOptimizedService {
     const tagObjectMap = new Map(tags.map((t: any) => [t.name, t]));
 
     // Helper pour récupérer la date d'un tag spécifique
-    const getTagDate = async (tagName: string): Promise<string | null> => {
+    const getTagDate = async (tagName: string): Promise<string | undefined> => {
       const tagObj = tagObjectMap.get(tagName);
-      if (!tagObj?.commit?.url) return null;
+      if (!tagObj?.commit?.url) return undefined;
 
       try {
         const commitRes = await this.makeHttpRequest(tagObj.commit.url, {
           headers: this.githubHeaders()
         });
-        return (commitRes as any).data?.commit?.committer?.date || null;
+        return (commitRes as any).data?.commit?.committer?.date || undefined;
       } catch (err) {
-        return null;
+        return undefined;
       }
     };
 
@@ -365,7 +365,7 @@ export class LangageUpdateOptimizedService {
       if (lts) {
         // Trouver le tag original qui correspond à cette version LTS
         const ltsTag = filteredTags.find(t => semver.coerce(t)?.version === lts);
-        const ltsDate = ltsTag ? await getTagDate(ltsTag) : null;
+        const ltsDate = ltsTag ? await getTagDate(ltsTag) : undefined;
         await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts), ltsDate);
       }
     }
