@@ -210,8 +210,30 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     const stable = res.data.find((v: any) => v.stable);
     if (stable?.version) {
       const latest = stable.version.replace(/^go/, '');
-      await setVersion(config.nameInDb, 'current', normalizeLabel(config.nameInDb, latest));
-      logger.log(`✅ Go (custom): current=${latest}`);
+
+      // Fetch release date from GitHub tag
+      let releaseDate: string | undefined = undefined;
+      try {
+        const tagName = stable.version; // e.g., "go1.25.5"
+        const tagRes = await firstValueFrom(
+          http.get(`https://api.github.com/repos/golang/go/git/refs/tags/${tagName}`, {
+            headers: {
+              'User-Agent': 'verstack-bot',
+              ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {})
+            }
+          })
+        );
+
+        if (tagRes.data?.object?.url) {
+          const commitRes = await firstValueFrom(http.get(tagRes.data.object.url));
+          releaseDate = commitRes.data?.committer?.date;
+        }
+      } catch (err) {
+        logger.warn(`⚠️ Go: impossible de récupérer la date depuis GitHub pour ${stable.version}`);
+      }
+
+      await setVersion(config.nameInDb, 'current', normalizeLabel(config.nameInDb, latest), releaseDate);
+      logger.log(`✅ Go (custom): current=${latest}${releaseDate ? ` (${releaseDate})` : ''}`);
     } else {
       logger.warn(`⚠️ Aucune version stable trouvée pour Go`);
     }
