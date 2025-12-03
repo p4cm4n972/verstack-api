@@ -325,16 +325,16 @@ export class LangageUpdateOptimizedService {
 
     // Logique spécifique pour JavaScript/ECMAScript
     if (['JavaScript', 'ECMAScript'].includes(config.nameInDb)) {
-      const editions = filteredTags
+      const editionTags = filteredTags
         .filter(t => /^es\d{4}$/i.test(t))
-        .map(t => t.toUpperCase())
         .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
 
-      const latestEdition = editions[0];
-      if (latestEdition) {
-        const editionDate = await getTagDate(latestEdition);
-        await this.setVersion(config.nameInDb, 'edition', latestEdition, editionDate);
-        this.logger.log(`✅ ${config.nameInDb} (GitHub tags): edition=${latestEdition}`);
+      const latestEditionTag = editionTags[0];
+      if (latestEditionTag) {
+        const editionDate = await getTagDate(latestEditionTag);
+        const normalizedEdition = latestEditionTag.toUpperCase();
+        await this.setVersion(config.nameInDb, 'edition', normalizedEdition, editionDate);
+        this.logger.log(`✅ ${config.nameInDb} (GitHub tags): edition=${normalizedEdition}`);
       } else {
         this.logger.warn(`⚠️ Impossible de trouver l'édition ECMAScript pour ${config.nameInDb}`);
       }
@@ -344,12 +344,18 @@ export class LangageUpdateOptimizedService {
     // Traitement standard via helper
     const latest = extractLatestFromTags(filteredTags);
     if (latest) {
-      const latestDate = await getTagDate(latest);
+      // Trouver le tag original qui correspond à la version extraite
+      const originalTag = filteredTags.find(t => {
+        const coerced = semver.coerce(t);
+        return coerced?.version === latest || t === latest;
+      });
+      const latestDate = originalTag ? await getTagDate(originalTag) : undefined;
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), latestDate);
     } else {
       // fallback for non-semver tags (e.g., Flang release_1_0)
       const fallback = extractFallbackVersionFromTags(filteredTags);
       if (fallback) {
+        // Pour le fallback, le tag retourné est déjà l'original
         const fallbackDate = await getTagDate(fallback);
         await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback), fallbackDate);
       }
