@@ -195,6 +195,7 @@ export class LangageUpdateOptimizedService {
   async updateFromNpm(config: LangageSyncConfig) {
     const res = await this.makeHttpRequest(`https://registry.npmjs.org/${config.sourceUrl}`);
     const distTags = (res as any).data['dist-tags'] || {};
+    const times = (res as any).data.time || {};
     const latest = distTags.latest;
     let lts = distTags.lts as string | undefined;
 
@@ -208,9 +209,13 @@ export class LangageUpdateOptimizedService {
       }
     }
 
-    await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    // Récupérer les dates de publication depuis npm
+    const latestDate = times[latest] ?? null;
+    const ltsDate = lts ? (times[lts] ?? null) : null;
+
+    await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), latestDate);
     if (config.ltsSupport && lts) {
-      await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
+      await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts), ltsDate);
     }
 
     if (config.edition) {
@@ -260,7 +265,7 @@ export class LangageUpdateOptimizedService {
   }
 
   async updateFromGitHubTag(config: LangageSyncConfig) {
-    const tags: string[] = [];
+    const tags: any[] = [];
 
     // Utiliser la parallélisation pour récupérer plusieurs pages
     const pagePromises = Array.from({ length: 5 }, (_, i) => i + 1).map(page =>
@@ -275,13 +280,33 @@ export class LangageUpdateOptimizedService {
     for (const res of responses) {
       const resData = (res as any).data;
       if (resData?.length > 0) {
-        tags.push(...resData.map((t: any) => t.name));
+        tags.push(...resData);
       }
       if (resData?.length < 100) break;
     }
 
+    const tagNames = tags.map((t: any) => t.name);
+
+    // Créer un map des tags avec leurs objets pour récupérer les dates plus tard
+    const tagObjectMap = new Map(tags.map((t: any) => [t.name, t]));
+
+    // Helper pour récupérer la date d'un tag spécifique
+    const getTagDate = async (tagName: string): Promise<string | null> => {
+      const tagObj = tagObjectMap.get(tagName);
+      if (!tagObj?.commit?.url) return null;
+
+      try {
+        const commitRes = await this.makeHttpRequest(tagObj.commit.url, {
+          headers: this.githubHeaders()
+        });
+        return (commitRes as any).data?.commit?.committer?.date || null;
+      } catch (err) {
+        return null;
+      }
+    };
+
     // Filtrer les tags selon le langage (avant tout traitement)
-    const filteredTags = this.filterTagsForLanguage(tags, config.nameInDb);
+    const filteredTags = this.filterTagsForLanguage(tagNames, config.nameInDb);
 
     // Logique spécifique pour C++
     if (config.nameInDb === 'C++' && config.standardSupport) {
@@ -307,7 +332,8 @@ export class LangageUpdateOptimizedService {
 
       const latestEdition = editions[0];
       if (latestEdition) {
-        await this.setVersion(config.nameInDb, 'edition', latestEdition);
+        const editionDate = await getTagDate(latestEdition);
+        await this.setVersion(config.nameInDb, 'edition', latestEdition, editionDate);
         this.logger.log(`✅ ${config.nameInDb} (GitHub tags): edition=${latestEdition}`);
       } else {
         this.logger.warn(`⚠️ Impossible de trouver l'édition ECMAScript pour ${config.nameInDb}`);
@@ -318,12 +344,14 @@ export class LangageUpdateOptimizedService {
     // Traitement standard via helper
     const latest = extractLatestFromTags(filteredTags);
     if (latest) {
-      await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+      const latestDate = await getTagDate(latest);
+      await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), latestDate);
     } else {
       // fallback for non-semver tags (e.g., Flang release_1_0)
       const fallback = extractFallbackVersionFromTags(filteredTags);
       if (fallback) {
-        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback));
+        const fallbackDate = await getTagDate(fallback);
+        await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, fallback), fallbackDate);
       }
     }
 
@@ -335,7 +363,10 @@ export class LangageUpdateOptimizedService {
         .sort(semver.rcompare);
       const lts = versions.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
       if (lts) {
-        await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
+        // Trouver le tag original qui correspond à cette version LTS
+        const ltsTag = filteredTags.find(t => semver.coerce(t)?.version === lts);
+        const ltsDate = ltsTag ? await getTagDate(ltsTag) : null;
+        await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts), ltsDate);
       }
     }
 
