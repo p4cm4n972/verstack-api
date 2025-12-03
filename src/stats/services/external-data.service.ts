@@ -22,7 +22,7 @@ interface GitHubSearchResponse {
 export class ExternalDataService {
   private readonly STACKOVERFLOW_API = 'https://api.stackexchange.com/2.3/tags';
   private readonly GITHUB_API = 'https://api.github.com/search/repositories';
-  private readonly githubToken: string;
+  private readonly githubToken?: string;
 
   // Mapping des noms de langages pour les différentes sources
   private readonly LANGUAGE_MAPPING: Map<string, { stackoverflow: string; github: string }> = new Map([
