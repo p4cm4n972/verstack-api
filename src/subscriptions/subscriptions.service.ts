@@ -15,7 +15,8 @@ import {
 
 @Injectable()
 export class SubscriptionsService {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
+  private stripeEnabled: boolean = false;
 
   constructor(
     @InjectModel(Subscription.name)
@@ -24,16 +25,32 @@ export class SubscriptionsService {
     private userModel: Model<User>,
     private configService: ConfigService,
   ) {
-    this.stripe = new Stripe(
-      this.configService.get<string>('stripe.secretKey') || '',
-      { apiVersion: '2025-11-17.clover' },
-    );
+    // Initialiser Stripe seulement si la clé est configurée et valide
+    const stripeSecretKey = this.configService.get<string>('stripe.secretKey');
+
+    if (stripeSecretKey && stripeSecretKey.startsWith('sk_')) {
+      try {
+        this.stripe = new Stripe(stripeSecretKey, {
+          apiVersion: '2025-11-17.clover'
+        });
+        this.stripeEnabled = true;
+      } catch (error) {
+        console.warn('Failed to initialize Stripe:', error.message);
+        this.stripeEnabled = false;
+      }
+    } else {
+      console.warn('Stripe secret key not configured or invalid - Stripe features disabled');
+    }
   }
 
   /**
    * Créer une session Stripe Checkout
    */
   async createCheckoutSession(dto: CreateCheckoutSessionDto) {
+    if (!this.stripeEnabled || !this.stripe) {
+      throw new BadRequestException('Stripe is not configured. Payment features are disabled.');
+    }
+
     const user = await this.userModel.findById(dto.userId);
     if (!user) {
       throw new NotFoundException('Utilisateur non trouvé');
@@ -137,6 +154,10 @@ export class SubscriptionsService {
    * Annuler un abonnement
    */
   async cancelSubscription(dto: CancelSubscriptionDto) {
+    if (!this.stripeEnabled || !this.stripe) {
+      throw new BadRequestException('Stripe is not configured. Cannot cancel subscription.');
+    }
+
     const subscription = await this.subscriptionModel.findOne({
       userId: new Types.ObjectId(dto.userId),
       status: SubscriptionStatus.ACTIVE,
@@ -170,6 +191,10 @@ export class SubscriptionsService {
    * Réactiver un abonnement annulé
    */
   async reactivateSubscription(dto: ReactivateSubscriptionDto) {
+    if (!this.stripeEnabled || !this.stripe) {
+      throw new BadRequestException('Stripe is not configured. Cannot reactivate subscription.');
+    }
+
     const subscription = await this.subscriptionModel.findOne({
       userId: new Types.ObjectId(dto.userId),
       status: SubscriptionStatus.CANCELLED,
