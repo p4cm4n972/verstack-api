@@ -50,28 +50,49 @@ export class SubscriptionCleanupService {
 
     try {
       const now = new Date();
+      const BATCH_SIZE = 100;
+      let processed = 0;
+      let skip = 0;
 
-      const expiredSubscriptions = await this.subscriptionModel.find({
-        status: SubscriptionStatus.ACTIVE,
-        endDate: { $lt: now },
-        autoRenew: false,
-      });
+      while (true) {
+        const expiredSubscriptions = await this.subscriptionModel
+          .find({
+            status: SubscriptionStatus.ACTIVE,
+            endDate: { $lt: now },
+            autoRenew: false,
+          })
+          .limit(BATCH_SIZE)
+          .skip(skip)
+          .exec();
 
-      for (const subscription of expiredSubscriptions) {
-        subscription.status = SubscriptionStatus.EXPIRED;
-        await subscription.save();
+        if (expiredSubscriptions.length === 0) {
+          break;
+        }
 
-        // Rétrograder le rôle utilisateur
-        await this.userModel.findByIdAndUpdate(subscription.userId, {
-          role: Role.Regular,
-        });
+        for (const subscription of expiredSubscriptions) {
+          subscription.status = SubscriptionStatus.EXPIRED;
+          await subscription.save();
 
-        this.logger.log(
-          `Expired subscription ${subscription._id} for user ${subscription.userId}`,
-        );
+          // Rétrograder le rôle utilisateur
+          await this.userModel.findByIdAndUpdate(subscription.userId, {
+            role: Role.Regular,
+          });
+
+          this.logger.log(
+            `Expired subscription ${subscription._id} for user ${subscription.userId}`,
+          );
+        }
+
+        processed += expiredSubscriptions.length;
+        skip += BATCH_SIZE;
+
+        // Si on a traité moins que BATCH_SIZE, c'est la dernière page
+        if (expiredSubscriptions.length < BATCH_SIZE) {
+          break;
+        }
       }
 
-      this.logger.log(`Processed ${expiredSubscriptions.length} expired subscriptions`);
+      this.logger.log(`Processed ${processed} expired subscriptions`);
     } catch (error) {
       this.logger.error('Error checking expired subscriptions:', error.message);
     }
@@ -91,31 +112,53 @@ export class SubscriptionCleanupService {
     this.logger.log('Syncing subscriptions with Stripe...');
 
     try {
-      const activeSubscriptions = await this.subscriptionModel.find({
-        status: { $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING] },
-      });
+      const BATCH_SIZE = 100;
+      let processed = 0;
+      let skip = 0;
 
-      for (const subscription of activeSubscriptions) {
-        try {
-          const stripeSubscription = await this.stripe.subscriptions.retrieve(
-            subscription.stripeSubscriptionId,
-          );
+      while (true) {
+        const activeSubscriptions = await this.subscriptionModel
+          .find({
+            status: { $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING] },
+          })
+          .limit(BATCH_SIZE)
+          .skip(skip)
+          .exec();
 
-          if (stripeSubscription.status !== subscription.status) {
-            subscription.status = stripeSubscription.status as SubscriptionStatus;
-            await subscription.save();
-            this.logger.log(
-              `Updated subscription ${subscription._id} status to ${stripeSubscription.status}`,
+        if (activeSubscriptions.length === 0) {
+          break;
+        }
+
+        for (const subscription of activeSubscriptions) {
+          try {
+            const stripeSubscription = await this.stripe.subscriptions.retrieve(
+              subscription.stripeSubscriptionId,
+            );
+
+            if (stripeSubscription.status !== subscription.status) {
+              subscription.status = stripeSubscription.status as SubscriptionStatus;
+              await subscription.save();
+              this.logger.log(
+                `Updated subscription ${subscription._id} status to ${stripeSubscription.status}`,
+              );
+            }
+          } catch (error) {
+            this.logger.error(
+              `Error syncing subscription ${subscription._id}: ${error.message}`,
             );
           }
-        } catch (error) {
-          this.logger.error(
-            `Error syncing subscription ${subscription._id}: ${error.message}`,
-          );
+        }
+
+        processed += activeSubscriptions.length;
+        skip += BATCH_SIZE;
+
+        // Si on a traité moins que BATCH_SIZE, c'est la dernière page
+        if (activeSubscriptions.length < BATCH_SIZE) {
+          break;
         }
       }
 
-      this.logger.log('Stripe sync completed');
+      this.logger.log(`Stripe sync completed - processed ${processed} subscriptions`);
     } catch (error) {
       this.logger.error('Error during Stripe sync:', error.message);
     }

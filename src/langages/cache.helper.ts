@@ -4,6 +4,7 @@ interface CacheEntry<T> {
   data: T;
   timestamp: number;
   ttl: number;
+  timeoutId?: NodeJS.Timeout;
 }
 
 export class CacheHelper {
@@ -38,10 +39,23 @@ export class CacheHelper {
     this.logger.debug(`🔄 Cache miss, fetching: ${safeKey}`);
     try {
       const data = await fetcher();
+
+      // Annuler le timeout existant si présent
+      if (cached?.timeoutId) {
+        clearTimeout(cached.timeoutId);
+      }
+
+      // Programmer la suppression automatique après expiration
+      const timeoutId = setTimeout(() => {
+        this.cache.delete(key);
+        this.logger.debug(`🗑️ Cache auto-expiré pour: ${safeKey}`);
+      }, ttlMs);
+
       this.cache.set(key, {
         data,
         timestamp: now,
-        ttl: ttlMs
+        ttl: ttlMs,
+        timeoutId
       });
       return data;
     } catch (error) {
@@ -55,6 +69,10 @@ export class CacheHelper {
   }
 
   static invalidate(key: string): void {
+    const entry = this.cache.get(key);
+    if (entry?.timeoutId) {
+      clearTimeout(entry.timeoutId);
+    }
     this.cache.delete(key);
     this.logger.debug(`🗑️ Cache invalidé pour: ${key}`);
   }
@@ -62,11 +80,23 @@ export class CacheHelper {
   static invalidatePattern(pattern: string): void {
     const regex = new RegExp(pattern);
     const keysToDelete = Array.from(this.cache.keys()).filter(key => regex.test(key));
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach(key => {
+      const entry = this.cache.get(key);
+      if (entry?.timeoutId) {
+        clearTimeout(entry.timeoutId);
+      }
+      this.cache.delete(key);
+    });
     this.logger.debug(`🗑️ Cache invalidé pour le pattern: ${pattern} (${keysToDelete.length} entrées)`);
   }
 
   static clear(): void {
+    // Nettoyer tous les timeouts avant de vider le cache
+    this.cache.forEach((entry) => {
+      if (entry.timeoutId) {
+        clearTimeout(entry.timeoutId);
+      }
+    });
     this.cache.clear();
     this.logger.debug('🗑️ Cache vidé complètement');
   }
