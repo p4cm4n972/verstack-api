@@ -143,9 +143,31 @@ export class SubscriptionCleanupService {
               );
             }
           } catch (error) {
-            this.logger.error(
-              `Error syncing subscription ${subscription._id}: ${error.message}`,
-            );
+            // Si l'abonnement n'existe pas dans Stripe, le marquer comme annulé
+            if (error.message && error.message.includes('No such subscription')) {
+              this.logger.warn(
+                `Subscription ${subscription.stripeSubscriptionId} not found in Stripe - marking as cancelled in database`,
+              );
+              subscription.status = SubscriptionStatus.CANCELLED;
+              subscription.endDate = new Date();
+              await subscription.save();
+
+              // Rétrograder le rôle utilisateur si nécessaire
+              try {
+                await this.userModel.findByIdAndUpdate(subscription.userId, {
+                  role: Role.Regular,
+                });
+              } catch (updateError) {
+                this.logger.error(
+                  `Failed to update user role for subscription ${subscription._id}: ${updateError.message}`,
+                );
+              }
+            } else {
+              // Autre type d'erreur, juste logger
+              this.logger.error(
+                `Error syncing subscription ${subscription._id}: ${error.message}`,
+              );
+            }
           }
         }
 
