@@ -11,7 +11,8 @@ import { getFirstTuesdayOfYear } from '../subscriptions/proration.util';
 @Injectable()
 export class WebhooksService {
   private readonly logger = new Logger(WebhooksService.name);
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
+  private stripeEnabled: boolean = false;
 
   constructor(
     @InjectModel(Subscription.name)
@@ -20,13 +21,31 @@ export class WebhooksService {
     private userModel: Model<User>,
     private configService: ConfigService,
   ) {
-    this.stripe = new Stripe(
-      this.configService.get<string>('stripe.secretKey') || '',
-      { apiVersion: '2025-11-17.clover' },
-    );
+    // Initialiser Stripe seulement si la clé est configurée et valide
+    const stripeSecretKey = this.configService.get<string>('stripe.secretKey');
+
+    if (stripeSecretKey && stripeSecretKey.startsWith('sk_')) {
+      try {
+        this.stripe = new Stripe(stripeSecretKey, {
+          apiVersion: '2025-11-17.clover'
+        });
+        this.stripeEnabled = true;
+        this.logger.log('Stripe initialized successfully for webhooks');
+      } catch (error) {
+        this.logger.warn('Failed to initialize Stripe for webhooks:', error.message);
+        this.stripeEnabled = false;
+      }
+    } else {
+      this.logger.warn('Stripe secret key not configured or invalid - Webhook features disabled');
+    }
   }
 
   async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+    if (!this.stripeEnabled || !this.stripe) {
+      this.logger.warn('Stripe not configured - skipping checkout.session.completed webhook');
+      return;
+    }
+
     const userId = session.metadata?.userId;
     const stripeSubscriptionId = session.subscription as string;
     const customerId = session.customer as string;
