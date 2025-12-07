@@ -17,16 +17,29 @@ import { AuthType } from '../iam/authentication/enums/auth-type.enum';
 @Controller('api/webhooks')
 export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name);
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
+  private stripeEnabled: boolean = false;
 
   constructor(
     private readonly webhooksService: WebhooksService,
     private configService: ConfigService,
   ) {
-    this.stripe = new Stripe(
-      this.configService.get<string>('stripe.secretKey') || '',
-      { apiVersion: '2025-11-17.clover' },
-    );
+    const stripeSecretKey = this.configService.get<string>('stripe.secretKey');
+
+    if (stripeSecretKey && stripeSecretKey.startsWith('sk_')) {
+      try {
+        this.stripe = new Stripe(stripeSecretKey, {
+          apiVersion: '2025-11-17.clover'
+        });
+        this.stripeEnabled = true;
+        this.logger.log('Stripe initialized successfully for webhook controller');
+      } catch (error) {
+        this.logger.warn('Failed to initialize Stripe for webhook controller:', error.message);
+        this.stripeEnabled = false;
+      }
+    } else {
+      this.logger.warn('Stripe secret key not configured or invalid - Webhook endpoint disabled');
+    }
   }
 
   @Post('stripe')
@@ -34,6 +47,11 @@ export class WebhooksController {
     @Req() req: Request,
     @Headers('stripe-signature') signature: string,
   ) {
+    if (!this.stripeEnabled || !this.stripe) {
+      this.logger.warn('Stripe not configured - webhook endpoint disabled');
+      throw new BadRequestException('Stripe webhooks are not configured');
+    }
+
     const webhookSecret = this.configService.get<string>('stripe.webhookSecret') || '';
     let event: Stripe.Event;
 
