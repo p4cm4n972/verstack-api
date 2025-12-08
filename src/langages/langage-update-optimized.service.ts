@@ -293,14 +293,26 @@ export class LangageUpdateOptimizedService {
     // Helper pour récupérer la date d'un tag spécifique
     const getTagDate = async (tagName: string): Promise<string | undefined> => {
       const tagObj = tagObjectMap.get(tagName);
-      if (!tagObj?.commit?.url) return undefined;
+      if (!tagObj) {
+        this.logger.warn(`⚠️ Tag "${tagName}" introuvable dans tagObjectMap pour ${config.nameInDb}`);
+        return undefined;
+      }
+      if (!tagObj.commit?.url) {
+        this.logger.warn(`⚠️ Pas de commit.url pour le tag "${tagName}" (${config.nameInDb})`);
+        return undefined;
+      }
 
       try {
         const commitRes = await this.makeHttpRequest(tagObj.commit.url, {
           headers: this.githubHeaders()
         });
-        return (commitRes as any).data?.commit?.committer?.date || undefined;
+        const date = (commitRes as any).data?.commit?.committer?.date;
+        if (!date) {
+          this.logger.warn(`⚠️ Pas de date de commit trouvée pour "${tagName}" (${config.nameInDb})`);
+        }
+        return date || undefined;
       } catch (err) {
+        this.logger.warn(`⚠️ Erreur lors de la récupération de la date pour "${tagName}" (${config.nameInDb}): ${err.message}`);
         return undefined;
       }
     };
