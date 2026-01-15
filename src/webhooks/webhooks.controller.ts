@@ -29,7 +29,7 @@ export class WebhooksController {
     if (stripeSecretKey && stripeSecretKey.startsWith('sk_')) {
       try {
         this.stripe = new Stripe(stripeSecretKey, {
-          apiVersion: '2025-11-17.clover'
+          apiVersion: '2025-12-15.clover'
         });
         this.stripeEnabled = true;
         this.logger.log('Stripe initialized successfully for webhook controller');
