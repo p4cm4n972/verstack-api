@@ -162,7 +162,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   github('Arduino', 'arduino/Arduino'),
   github('ESP-IDF', 'espressif/esp-idf'),
   github('Mbed OS', 'ARMmbed/mbed-os'),
-  github('STM32Cube', 'STMicroelectronics/STM32CubeF4'),
+  github('STM32Cube', 'STMicroelectronics/STM32CubeF4', { useTags: true }),
   github('Nordic SDK', 'nrfconnect/sdk-nrf'),
   // Embedded - Build & Tools
   custom('PlatformIO', 'platformio'),
@@ -184,7 +184,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Datascience - Data Processing
   npm('Pandas', 'pandas'),
   npm('NumPy', 'numpy'),
-  github('Apache Spark', 'apache/spark'),
+  github('Apache Spark', 'apache/spark', { useTags: true }),
   github('Polars', 'pola-rs/polars'),
   npm('Dask', 'dask'),
   // Datascience - Visualization
@@ -205,11 +205,11 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // IA - Computer Vision
   github('OpenCV', 'opencv/opencv'),
   github('YOLO', 'ultralytics/ultralytics'),
-  npm('Albumentations', 'albumentations'),
+  custom('Albumentations', 'albumentations'),
   // IA - NLP
   github('spaCy', 'explosion/spaCy'),
   github('Transformers', 'huggingface/transformers'),
-  github('NLTK', 'nltk/nltk'),
+  github('NLTK', 'nltk/nltk', { useTags: true }),
   github('Gensim', 'RaRe-Technologies/gensim'),
   // IA - Vector Databases
   custom('Pinecone', 'pinecone'),
@@ -228,15 +228,15 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   custom('TFLite', 'tflite'),
   // IA - AutoML
   github('Auto-sklearn', 'automl/auto-sklearn'),
-  github('H2O.ai', 'h2oai/h2o-3'),
+  custom('H2O.ai', 'h2o'),
   // IA - Reinforcement Learning
   github('Stable Baselines3', 'DLR-RM/stable-baselines3'),
   github('OpenAI Gym', 'Farama-Foundation/Gymnasium'),
   // Game - Game Engines 3D
-  github('Unreal Engine', 'EpicGames/UnrealEngine'),
+  custom('Unreal Engine', 'unreal-engine'),
   github('Godot', 'godotengine/godot'),
   // Game - Game Engines 2D
-  github('GameMaker', 'YoYoGames/GameMaker-Manual'),
+  custom('GameMaker', 'gamemaker'),
   // Game - Web Game Frameworks
   npm('Phaser', 'phaser'),
   npm('Three.js', 'three'),
@@ -246,7 +246,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // Game - Cross-Platform Frameworks
   github('libGDX', 'libgdx/libgdx'),
   github('MonoGame', 'MonoGame/MonoGame'),
-  github('Cocos2d-x', 'cocos2d/cocos2d-x'),
+  custom('Cocos2d-x', 'cocos2d-x'),
   github('Defold', 'defold/defold'),
   // Game - Graphics APIs
   custom('OpenGL', 'opengl'),
@@ -263,7 +263,7 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   custom('Photon', 'photon'),
   github('Mirror', 'MirrorNetworking/Mirror'),
   // Game - Asset Tools
-  github('Blender', 'blender/blender'),
+  github('Blender', 'blender/blender', { useTags: true }),
   github('Aseprite', 'aseprite/aseprite'),
   // DevOps - IaC
   github('Terraform', 'hashicorp/terraform'),
@@ -273,8 +273,8 @@ export const SYNC_LANGAGES: LangageSyncConfig[] = [
   // DevOps - CI/CD
   github('Jenkins', 'jenkinsci/jenkins'),
   custom('GitHub Actions', 'github-actions'),
-  github('GitLab CI', 'gitlabhq/gitlabhq'),
-  github('CircleCI', 'circleci/circleci-docs'),
+  github('GitLab CI', 'gitlabhq/gitlabhq', { useTags: true }),
+  custom('CircleCI', 'circleci'),
   custom('Azure DevOps', 'azure-devops'),
   // DevOps - Containerization
   github('Podman', 'containers/podman'),

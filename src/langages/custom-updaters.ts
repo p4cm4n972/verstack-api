@@ -694,5 +694,123 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Jupyter]:', err);
     }
+  },
+  // Python packages that were incorrectly using npm
+  albumentations: async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(http.get('https://pypi.org/pypi/albumentations/json'));
+      const latest = res.data?.info?.version;
+      const releases = res.data?.releases?.[latest];
+      const releaseDate = releases?.[0]?.upload_time_iso_8601 || releases?.[0]?.upload_time;
+      if (latest) {
+        await setVersion('Albumentations', 'current', latest, releaseDate);
+        logger.log(`✅ Albumentations (custom via PyPI): current=${latest}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Albumentations]:', err);
+    }
+  },
+  h2o: async (_config, { http, setVersion, logger }) => {
+    try {
+      // H2O.ai Python package
+      const res = await firstValueFrom(http.get('https://pypi.org/pypi/h2o/json'));
+      const latest = res.data?.info?.version;
+      const releases = res.data?.releases?.[latest];
+      const releaseDate = releases?.[0]?.upload_time_iso_8601 || releases?.[0]?.upload_time;
+      if (latest) {
+        await setVersion('H2O.ai', 'current', latest, releaseDate);
+        logger.log(`✅ H2O.ai (custom via PyPI): current=${latest}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [H2O.ai]:', err);
+    }
+  },
+  // Cocos2d-x uses non-standard tag format: cocos2d-x-4.0
+  'cocos2d-x': async (_config, { http, setVersion, logger }) => {
+    try {
+      const res = await firstValueFrom(http.get('https://api.github.com/repos/cocos2d/cocos2d-x/tags', {
+        params: { per_page: 100 },
+        headers: { 'User-Agent': 'verstack-bot', ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}) }
+      }));
+      const tags = res.data.map((t: any) => t.name);
+      // Filter tags like cocos2d-x-4.0, cocos2d-x-3.17.2
+      const versionTags = tags
+        .filter((t: string) => /^cocos2d-x-\d+\.\d+/.test(t) && !t.includes('alpha') && !t.includes('beta'))
+        .map((t: string) => ({
+          tag: t,
+          version: t.replace('cocos2d-x-', '')
+        }))
+        .sort((a: any, b: any) => {
+          const va = semver.coerce(a.version);
+          const vb = semver.coerce(b.version);
+          if (va && vb) return semver.rcompare(va, vb);
+          return b.version.localeCompare(a.version);
+        });
+      if (versionTags.length > 0) {
+        const latest = versionTags[0];
+        await setVersion('Cocos2d-x', 'current', latest.version);
+        logger.log(`✅ Cocos2d-x (custom via GitHub tags): current=${latest.version}`);
+      }
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Cocos2d-x]:', err);
+    }
+  },
+  // Unreal Engine - Private repo, use Wikipedia/static version
+  'unreal-engine': async (_config, { http, setVersion, logger }) => {
+    try {
+      // Try to get from Wikipedia API
+      const apiUrl = 'https://en.wikipedia.org/w/api.php?action=parse&page=Unreal_Engine&prop=text&format=json';
+      const res = await firstValueFrom(http.get(apiUrl, { headers: { 'User-Agent': 'verstack-bot' }, responseType: 'json' as any }));
+      const html = res.data?.parse?.text?.['*'] as string | undefined;
+      if (html) {
+        // Look for version pattern like "5.5" or "5.4.4"
+        const match = html.match(/Stable release[^]*?(\d+\.\d+(?:\.\d+)?)/i);
+        if (match?.[1]) {
+          await setVersion('Unreal Engine', 'current', match[1]);
+          logger.log(`✅ Unreal Engine (custom via Wikipedia): current=${match[1]}`);
+          return;
+        }
+      }
+      // Fallback to known stable version
+      await setVersion('Unreal Engine', 'current', '5.5');
+      logger.log('✅ Unreal Engine (custom): current=5.5 (fallback)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [Unreal Engine]:', err);
+    }
+  },
+  // GameMaker - Proprietary, use Wikipedia
+  gamemaker: async (_config, { http, setVersion, logger }) => {
+    try {
+      const apiUrl = 'https://en.wikipedia.org/w/api.php?action=parse&page=GameMaker&prop=text&format=json';
+      const res = await firstValueFrom(http.get(apiUrl, { headers: { 'User-Agent': 'verstack-bot' }, responseType: 'json' as any }));
+      const html = res.data?.parse?.text?.['*'] as string | undefined;
+      if (html) {
+        // Look for version pattern in the infobox
+        const match = html.match(/Stable release[^]*?(\d{4}\.\d+(?:\.\d+)?)/i);
+        if (match?.[1]) {
+          await setVersion('GameMaker', 'current', match[1]);
+          logger.log(`✅ GameMaker (custom via Wikipedia): current=${match[1]}`);
+          return;
+        }
+      }
+      // Fallback to known version
+      await setVersion('GameMaker', 'current', '2024.11');
+      logger.log('✅ GameMaker (custom): current=2024.11 (fallback)');
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [GameMaker]:', err);
+    }
+  },
+  // CircleCI - SaaS platform, follows date-based versioning
+  circleci: async (_config, { setVersion, logger }) => {
+    try {
+      // CircleCI is a SaaS platform with continuous deployment
+      // Use date-based version for the server/self-hosted version
+      const currentDate = new Date();
+      const version = `${currentDate.getFullYear()}.${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      await setVersion('CircleCI', 'current', version);
+      logger.log(`✅ CircleCI (custom): current=${version} (SaaS platform)`);
+    } catch (err) {
+      logger.error('❌ Erreur updateCustom [CircleCI]:', err);
+    }
   }
 };
