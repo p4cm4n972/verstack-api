@@ -154,27 +154,29 @@ export class LangageUpdateService {
     const existing = langage.versions.find(v => v.type === type);
 
     if (existing) {
+      const updateFields: Record<string, string> = {
+        'versions.$.label': label
+      };
+      // Only update releaseDate if explicitly provided
+      if (releaseDate) {
+        updateFields['versions.$.releaseDate'] = releaseDate;
+      }
       await this.langageModel.updateOne(
         { name, 'versions.type': type },
-        {
-          $set: {
-            'versions.$.label': label,
-            'versions.$.releaseDate': releaseDate || new Date().toISOString()
-          }
-        }
+        { $set: updateFields }
       );
     } else {
+      const versionDoc: { type: string; label: string; releaseDate?: string } = {
+        type,
+        label
+      };
+      // Only set releaseDate if explicitly provided
+      if (releaseDate) {
+        versionDoc.releaseDate = releaseDate;
+      }
       await this.langageModel.updateOne(
         { name },
-        {
-          $push: {
-            versions: {
-              type,
-              label,
-              releaseDate: releaseDate || new Date().toISOString()
-            }
-          }
-        }
+        { $push: { versions: versionDoc } }
       );
     }
   }

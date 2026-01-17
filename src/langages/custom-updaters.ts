@@ -171,19 +171,19 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
 
       // Sort by version number descending
       const sortedVersions = official
-        .map((r: any) => ({ version: r.version, lts: r.lts }))
+        .map((r: any) => ({ version: r.version, lts: r.lts, releaseDate: r.releaseDate }))
         .sort((a: any, b: any) => parseUnityVersion(b.version) - parseUnityVersion(a.version));
 
-      const latest = sortedVersions[0]?.version;
-      const ltsVersion = sortedVersions.find((r: any) => r.lts)?.version;
+      const latestEntry = sortedVersions[0];
+      const ltsEntry = sortedVersions.find((r: any) => r.lts);
 
-      if (latest) {
-        await setVersion('Unity', 'current', latest);
-        logger.log(`✅ Unity (custom): current=${latest}`);
+      if (latestEntry?.version) {
+        await setVersion('Unity', 'current', latestEntry.version, latestEntry.releaseDate);
+        logger.log(`✅ Unity (custom): current=${latestEntry.version}`);
       }
-      if (ltsVersion) {
-        await setVersion('Unity', 'lts', ltsVersion);
-        logger.log(`✅ Unity (custom): lts=${ltsVersion}`);
+      if (ltsEntry?.version) {
+        await setVersion('Unity', 'lts', ltsEntry.version, ltsEntry.releaseDate);
+        logger.log(`✅ Unity (custom): lts=${ltsEntry.version}`);
       }
     } catch (err) {
       logger.error('❌ Erreur updateCustom [Unity]', err);
@@ -265,8 +265,9 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
   Dart: async (config, { http, setVersion, logger }) => {
     const res = await firstValueFrom(http.get(config.sourceUrl));
     const version = res.data?.version;
+    const releaseDate = res.data?.date;
     if (version) {
-      await setVersion(config.nameInDb, 'current', version);
+      await setVersion(config.nameInDb, 'current', version, releaseDate);
       logger.log(`✅ Dart (custom): current=${version}`);
     } else {
       logger.warn(`⚠️ Impossible de récupérer la version de Dart`);
@@ -356,8 +357,9 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         })
       );
       const version = res.data?.latest?.version;
+      const published = res.data?.latest?.published;
       if (version) {
-        await setVersion('Riverpod', 'current', version);
+        await setVersion('Riverpod', 'current', version, published);
         logger.log(`✅ Riverpod (pub.dev): current=${version}`);
       } else {
         logger.warn(`⚠️ Riverpod (pub.dev): impossible de détecter la version`);
@@ -374,8 +376,9 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         })
       );
       const version = res.data?.latest?.version;
+      const published = res.data?.latest?.published;
       if (version) {
-        await setVersion('BLoC', 'current', version);
+        await setVersion('BLoC', 'current', version, published);
         logger.log(`✅ BLoC (pub.dev): current=${version}`);
       } else {
         logger.warn(`⚠️ BLoC (pub.dev): impossible de détecter la version`);
@@ -392,8 +395,9 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         })
       );
       const version = res.data?.latest?.version;
+      const published = res.data?.latest?.published;
       if (version) {
-        await setVersion('GetX', 'current', version);
+        await setVersion('GetX', 'current', version, published);
         logger.log(`✅ GetX (pub.dev): current=${version}`);
       } else {
         logger.warn(`⚠️ GetX (pub.dev): impossible de détecter la version`);
@@ -613,8 +617,11 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       // Use PyPI instead of GitHub
       const res = await firstValueFrom(http.get('https://pypi.org/pypi/Django/json'));
       const latest = res.data?.info?.version;
+      // Get upload time for the latest version
+      const releases = res.data?.releases?.[latest];
+      const releaseDate = releases?.[0]?.upload_time_iso_8601 || releases?.[0]?.upload_time;
       if (latest) {
-        await setVersion('Django', 'current', latest);
+        await setVersion('Django', 'current', latest, releaseDate);
         // LTS: Django 4.2.x
         await setVersion('Django', 'lts', '4.2');
         logger.log(`✅ Django (custom via PyPI): current=${latest}, lts=4.2`);
@@ -630,8 +637,9 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
         headers: { 'User-Agent': 'verstack-bot', ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}) }
       }));
       const version = res.data?.tag_name?.replace(/^v/, '');
+      const releaseDate = res.data?.published_at;
       if (version) {
-        await setVersion('PlatformIO', 'current', version);
+        await setVersion('PlatformIO', 'current', version, releaseDate);
         logger.log(`✅ PlatformIO (custom via GitHub): current=${version}`);
       }
     } catch (err) {
@@ -662,8 +670,10 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       // Use PyPI instead of npm (npm has malicious 0.0.1-security)
       const res = await firstValueFrom(http.get('https://pypi.org/pypi/seaborn/json'));
       const latest = res.data?.info?.version;
+      const releases = res.data?.releases?.[latest];
+      const releaseDate = releases?.[0]?.upload_time_iso_8601 || releases?.[0]?.upload_time;
       if (latest) {
-        await setVersion('Seaborn', 'current', latest);
+        await setVersion('Seaborn', 'current', latest, releaseDate);
         logger.log(`✅ Seaborn (custom via PyPI): current=${latest}`);
       }
     } catch (err) {
@@ -675,8 +685,10 @@ export const CUSTOM_UPDATERS: Record<string, CustomUpdater> = {
       // Use PyPI jupyter-core package
       const res = await firstValueFrom(http.get('https://pypi.org/pypi/jupyter-core/json'));
       const latest = res.data?.info?.version;
+      const releases = res.data?.releases?.[latest];
+      const releaseDate = releases?.[0]?.upload_time_iso_8601 || releases?.[0]?.upload_time;
       if (latest) {
-        await setVersion('Jupyter', 'current', latest);
+        await setVersion('Jupyter', 'current', latest, releaseDate);
         logger.log(`✅ Jupyter (custom via PyPI): current=${latest} (jupyter-core)`);
       }
     } catch (err) {
