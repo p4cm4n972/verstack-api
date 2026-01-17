@@ -133,6 +133,46 @@ export class LangageUpdateService {
     };
   }
 
+  /**
+   * Fetch the release date for a GitHub tag by looking up the commit date
+   */
+  private async getGitHubTagDate(repo: string, tagName: string): Promise<string | null> {
+    try {
+      // First, get the tag reference
+      const refRes = await firstValueFrom(
+        this.http.get(`https://api.github.com/repos/${repo}/git/refs/tags/${tagName}`, {
+          headers: this.githubHeaders()
+        })
+      );
+
+      const objectUrl = refRes.data?.object?.url;
+      if (!objectUrl) return null;
+
+      // Fetch the object (could be a commit or annotated tag)
+      const objectRes = await firstValueFrom(this.http.get(objectUrl, { headers: this.githubHeaders() }));
+
+      // If it's an annotated tag, get the tagger date or follow to commit
+      if (objectRes.data?.tagger?.date) {
+        return objectRes.data.tagger.date;
+      }
+
+      // If it's a commit, get the committer date
+      if (objectRes.data?.committer?.date) {
+        return objectRes.data.committer.date;
+      }
+
+      // If annotated tag points to a commit, follow it
+      if (objectRes.data?.object?.url) {
+        const commitRes = await firstValueFrom(this.http.get(objectRes.data.object.url, { headers: this.githubHeaders() }));
+        return commitRes.data?.committer?.date || null;
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   private async setVersion(name: string, type: string, label: string, releaseDate?: string) {
     // sanitize label: remove common leading "v" prefix before persisting (e.g. v1.2.3 -> 1.2.3)
     if (typeof label === 'string') {
@@ -306,7 +346,8 @@ export class LangageUpdateService {
     // --- DEBUT DE L'OPTIMISATION ---
 
     let latest: string | null = null;
-    const validVersionsForLts: string[] = [];
+    let latestTag: string | null = null; // Keep track of original tag for date lookup
+    const validVersionsForLts: { version: string; tag: string }[] = [];
 
     // Parcours unique (O(T)) pour trouver 'latest' et préparer la recherche 'lts'
     for (const tag of tags) {
@@ -314,30 +355,37 @@ export class LangageUpdateService {
       if (currentVersion && !semver.prerelease(currentVersion)) {
         // Ajoute à la liste pour la future recherche LTS, si nécessaire
         if (config.ltsSupport) {
-          validVersionsForLts.push(currentVersion);
+          validVersionsForLts.push({ version: currentVersion, tag });
         }
 
         // Trouve la version la plus récente en O(1)
         if (latest === null || semver.gt(currentVersion, latest)) {
           latest = currentVersion;
+          latestTag = tag;
         }
       }
     }
-    
+
     // Si la recherche principale n'a rien donné, on tente la méthode de secours
     if (!latest) {
       latest = extractFallbackVersionFromTags(tags);
+      latestTag = tags.find(t => t.includes(latest || '')) || null;
     }
-    
-    if (latest) {
+
+    if (latest && latestTag) {
+      // Fetch release date from GitHub tag
+      const releaseDate = await this.getGitHubTagDate(config.sourceUrl, latestTag);
+      await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), releaseDate || undefined);
+    } else if (latest) {
       await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
     }
 
     if (config.ltsSupport && config.ltsTagPrefix) {
       // Recherche LTS en O(T) sur le tableau déjà filtré, SANS tri.
-      const lts = validVersionsForLts.find(v => v.startsWith(`${config.ltsTagPrefix}.`));
-      if (lts) {
-        await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
+      const ltsEntry = validVersionsForLts.find(v => v.version.startsWith(`${config.ltsTagPrefix}.`));
+      if (ltsEntry) {
+        const ltsReleaseDate = await this.getGitHubTagDate(config.sourceUrl, ltsEntry.tag);
+        await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, ltsEntry.version), ltsReleaseDate || undefined);
       }
     }
     
