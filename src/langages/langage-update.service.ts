@@ -223,6 +223,7 @@ export class LangageUpdateService {
   async updateFromNpm(config: LangageSyncConfig) {
     const res = await firstValueFrom(this.http.get(`https://registry.npmjs.org/${config.sourceUrl}`));
     const distTags = res.data['dist-tags'] || {};
+    const timeData = res.data['time'] || {};
     const latest = distTags.latest;
     let lts = distTags.lts as string | undefined;
 
@@ -236,9 +237,13 @@ export class LangageUpdateService {
       }
     }
 
-    await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest));
+    // Get release dates from npm time field
+    const latestReleaseDate = timeData[latest] || null;
+    const ltsReleaseDate = lts ? (timeData[lts] || null) : null;
+
+    await this.setVersion(config.nameInDb, 'current', this.normalizeLabel(config.nameInDb, latest), latestReleaseDate);
     if (config.ltsSupport && lts) {
-      await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts));
+      await this.setVersion(config.nameInDb, 'lts', this.normalizeLabel(config.nameInDb, lts), ltsReleaseDate);
     }
 
     if (config.edition) {
