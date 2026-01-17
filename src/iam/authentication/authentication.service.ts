@@ -67,6 +67,7 @@ export class AuthenticationService {
         isAdmin: signUpDto.isAdmin || false,
         password: hashedPassword,
         profilePicture: signUpDto.profilePicture || '',
+        useGravatar: signUpDto.useGravatar || false,
         favoris: signUpDto.favoris || [],
         friends: signUpDto.friends || [],
         projets: signUpDto.projets || [],

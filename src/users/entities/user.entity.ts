@@ -49,6 +49,9 @@ export class User extends Document {
     @Prop()
     profilePicture: string;
 
+    @Prop({ default: false })
+    useGravatar: boolean;
+
     @Prop({ type: [Object], default: [] })
     favoris: object[];
 

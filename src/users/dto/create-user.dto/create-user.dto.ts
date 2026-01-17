@@ -55,6 +55,10 @@ export class CreateUserDto {
   @IsOptional()
   profilePicture: string;
 
+  @IsBoolean()
+  @IsOptional()
+  useGravatar: boolean;
+
   @IsArray()
   @IsOptional()
   favoris: object[];
