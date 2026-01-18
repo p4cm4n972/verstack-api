@@ -6,13 +6,15 @@ import Stripe from 'stripe';
 import { Subscription, SubscriptionDocument, SubscriptionStatus } from '../subscriptions/schemas/subscription.schema';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../users/enums/role.enum';
-import { getFirstTuesdayOfYear } from '../subscriptions/proration.util';
 
 @Injectable()
 export class WebhooksService {
   private readonly logger = new Logger(WebhooksService.name);
   private stripe: Stripe | null = null;
   private stripeEnabled: boolean = false;
+
+  /** Prix mensuel en euros */
+  private readonly MONTHLY_PRICE = 0.99;
 
   constructor(
     @InjectModel(Subscription.name)
@@ -40,6 +42,15 @@ export class WebhooksService {
     }
   }
 
+  /**
+   * Calcule la date de fin d'abonnement (1 mois après la date de début)
+   */
+  private getNextMonthDate(startDate: Date = new Date()): Date {
+    const nextMonth = new Date(startDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    return nextMonth;
+  }
+
   async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     if (!this.stripeEnabled || !this.stripe) {
       this.logger.warn('Stripe not configured - skipping checkout.session.completed webhook');
@@ -55,14 +66,9 @@ export class WebhooksService {
       return;
     }
 
-    // Récupérer les détails de l'abonnement Stripe
-    const stripeSubscription = await this.stripe.subscriptions.retrieve(
-      stripeSubscriptionId,
-    );
-
-    // Calculer la date de fin (premier mardi de l'année prochaine)
-    const nextYear = new Date().getFullYear() + 1;
-    const endDate = getFirstTuesdayOfYear(nextYear);
+    // Calculer la date de fin (1 mois après aujourd'hui)
+    const startDate = new Date();
+    const endDate = this.getNextMonthDate(startDate);
 
     // Créer l'abonnement dans la base de données
     const subscription = new this.subscriptionModel({
@@ -70,16 +76,12 @@ export class WebhooksService {
       stripeSubscriptionId,
       stripeCustomerId: customerId,
       status: SubscriptionStatus.ACTIVE,
-      startDate: new Date(),
+      startDate,
       endDate,
       nextBillingDate: endDate,
-      amount: 0.99,
+      amount: this.MONTHLY_PRICE,
       currency: 'EUR',
       autoRenew: true,
-      metadata: {
-        proratedAmount: parseFloat(session.metadata?.proratedAmount || '0.99'),
-        firstTuesdayRenewal: true,
-      },
     });
 
     await subscription.save();
@@ -90,7 +92,7 @@ export class WebhooksService {
       subscriptionId: subscription._id,
     });
 
-    this.logger.log(`Subscription created for user ${userId}`);
+    this.logger.log(`Monthly subscription created for user ${userId}`);
   }
 
   async handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription) {
@@ -140,9 +142,8 @@ export class WebhooksService {
 
     if (!subscription) return;
 
-    // Mettre à jour les dates de facturation
-    const nextYear = new Date().getFullYear() + 1;
-    const nextBillingDate = getFirstTuesdayOfYear(nextYear);
+    // Mettre à jour les dates de facturation pour le mois suivant
+    const nextBillingDate = this.getNextMonthDate(new Date());
 
     subscription.nextBillingDate = nextBillingDate;
     subscription.endDate = nextBillingDate;

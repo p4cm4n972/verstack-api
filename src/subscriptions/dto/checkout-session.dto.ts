@@ -1,9 +1,6 @@
-import { IsMongoId, IsBoolean } from 'class-validator';
+import { IsMongoId } from 'class-validator';
 
 export class CreateCheckoutSessionDto {
   @IsMongoId()
   userId: string;
-
-  @IsBoolean()
-  prorated: boolean;
 }

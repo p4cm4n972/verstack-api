@@ -6,7 +6,6 @@ import Stripe from 'stripe';
 import { Subscription, SubscriptionDocument, SubscriptionStatus } from './schemas/subscription.schema';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../users/enums/role.enum';
-import { calculateProration } from './proration.util';
 import {
   CreateCheckoutSessionDto,
   CancelSubscriptionDto,
@@ -44,7 +43,12 @@ export class SubscriptionsService {
   }
 
   /**
-   * Créer une session Stripe Checkout
+   * Prix mensuel de l'abonnement (en euros)
+   */
+  private readonly MONTHLY_PRICE = 0.99;
+
+  /**
+   * Créer une session Stripe Checkout pour abonnement mensuel
    */
   async createCheckoutSession(dto: CreateCheckoutSessionDto) {
     if (!this.stripeEnabled || !this.stripe) {
@@ -66,10 +70,6 @@ export class SubscriptionsService {
       throw new BadRequestException('Déjà abonné');
     }
 
-    // Calculer le prorata
-    const proration = calculateProration(0.99, new Date());
-    const amount = dto.prorated ? proration.proratedPrice : 0.99;
-
     // Créer ou récupérer le client Stripe
     let customerId = user.stripeCustomerId;
     if (!customerId) {
@@ -83,22 +83,10 @@ export class SubscriptionsService {
       await user.save();
     }
 
-    // Créer un coupon de réduction si prorata activé
-    let couponId: string | undefined;
-    if (dto.prorated && amount < 0.99) {
-      const discountPercent = Math.round(((0.99 - amount) / 0.99) * 100);
-      const coupon = await this.stripe.coupons.create({
-        percent_off: discountPercent,
-        duration: 'once',
-        name: `Prorata ${proration.daysRemaining} jours`,
-      });
-      couponId = coupon.id;
-    }
-
     // Récupérer les URLs depuis la config
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://verstack.io';
 
-    // Créer la session de paiement
+    // Créer la session de paiement pour abonnement mensuel
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -109,13 +97,9 @@ export class SubscriptionsService {
           quantity: 1,
         },
       ],
-      discounts: couponId ? [{ coupon: couponId }] : undefined,
       subscription_data: {
         metadata: {
           userId: user._id.toString(),
-          prorated: dto.prorated.toString(),
-          proratedAmount: amount.toString(),
-          nextRenewalDate: proration.nextRenewalDate.toISOString(),
         },
       },
       success_url: `${frontendUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -126,12 +110,7 @@ export class SubscriptionsService {
     return {
       sessionId: session.id,
       checkoutUrl: session.url,
-      amount,
-      prorationDetails: {
-        daysRemaining: proration.daysRemaining,
-        proratedAmount: proration.proratedPrice,
-        fullYearAmount: proration.fullYearPrice,
-      },
+      amount: this.MONTHLY_PRICE,
     };
   }
 
