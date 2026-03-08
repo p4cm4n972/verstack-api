@@ -84,7 +84,7 @@ export class SubscriptionsService {
     }
 
     // Récupérer les URLs depuis la config
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://verstack.io';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://version.itmade.fr';
 
     // Créer la session de paiement pour abonnement mensuel
     const session = await this.stripe.checkout.sessions.create({

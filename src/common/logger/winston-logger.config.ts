@@ -7,7 +7,7 @@ export const winstonLoggerConfig: winston.LoggerOptions = {
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.timestamp(),
-        nestWinstonModuleUtilities.format.nestLike('Verstack.io', {
+        nestWinstonModuleUtilities.format.nestLike('Version IT', {
           prettyPrint: true,
         }),
       ),

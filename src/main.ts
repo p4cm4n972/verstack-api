@@ -24,8 +24,8 @@ async function bootstrap() {
   // CORS configuration pour Vercel et développement local
   app.enableCors({
     origin: [
-      'https://verstack.io',
-      'https://www.verstack.io',
+      'https://version.itmade.fr',
+      'https://www.version.itmade.fr',
       'https://verstack-ihm.vercel.app',
       /\.vercel\.app$/,  // Tous les sous-domaines Vercel (preview deployments)
       'http://localhost:4200',  // Dev local Angular

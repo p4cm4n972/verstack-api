@@ -21,7 +21,7 @@ export class MailService {
   }
 
   async sendConfirmationEmail(to: string, token: string) {
-    const confirmUrl = `http://verstack.io/confirm-email?token=${token}`;
+    const confirmUrl = `https://version.itmade.fr/confirm-email?token=${token}`;
 
     await this.transporter.sendMail({
       from: this.configService.get('MAIL_FROM'),
@@ -35,7 +35,7 @@ export class MailService {
 
   async sendReinitialisationMail(user:any, token: string) {
 
-    const resetLink = `https://verstack.io/reset-password?token=${token}`;
+    const resetLink = `https://version.itmade.fr/reset-password?token=${token}`;
 
     await this.transporter.sendMail({
         from: this.configService.get('MAIL_FROM'),

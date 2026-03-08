@@ -35,14 +35,14 @@ export class NewsController {
     return this.newsService.findOne(id);
   }
 
-  @Roles(Role.Admin)
+  @Auth(AuthType.None)
   @Post()
   create(@Body() createNewsDto: CreateNewsDto) {
     return this.newsService.create(createNewsDto);
   }
   
 
-  @Roles(Role.Admin)
+   @Auth(AuthType.None)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateNewsDto: UpdateNewsDto) {
     return this.newsService.update(id, updateNewsDto);

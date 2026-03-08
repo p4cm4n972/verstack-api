@@ -23,7 +23,7 @@ jobs:
     - name: Deploy API
       run: |
         ssh ubuntu@"${{secrets.SSH_HOST}}" << 'EOF'
-          cd /var/www/verstack.io/verstack-api
+          cd /var/www/version.itmade.fr/verstack-api
           git pull origin master
           npm install
           npm run build
